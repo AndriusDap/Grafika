@@ -59,7 +59,7 @@ namespace ContentPipelineExtension
             
 
             var shadedMaterial = new EffectMaterialContent();
-            shadedMaterial.Effect = new ExternalReference<EffectContent>("TerrainShader.fx");
+            shadedMaterial.Effect = new ExternalReference<EffectContent>("TerrainToonShader.fx");
             foreach (var texture in material.Textures)
             {
                 shadedMaterial.Textures.Add(texture.Key, texture.Value);

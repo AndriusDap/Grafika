@@ -33,6 +33,8 @@ sampler DiffuseTextureSampler = sampler_state {  texture = <DiffuseTexture> ; ma
 Texture NormalMap;
 sampler NormalMapSampler = sampler_state { texture = <NormalMap>; magFilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
 
+Texture CellMap;
+sampler2D ColorMapSampler = sampler_state {texture = <CellMap>; magFilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; };
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
@@ -64,49 +66,19 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
 	float4 ambientSum = float4(AmbientLightColor * AmbientIntensity, 0.0);
 	float4 diffuseSum = (0.0, 0.0, 0.0, 0.0);
-	
+	float4 cellSum = (0.0, 0.0, 0.0, 0.0);
 	float3 DiffuseColor = tex2D(DiffuseTextureSampler, input.TexCoords);	
 	ambientSum = ambientSum * float4(DiffuseColor, 1);
 
 	float4 normal = float4(input.Normal, 1);
 	
-	float4 diffuse = saturate(dot(-Light0Direction, normal));
-	float intensity = dot(-Light0Direction, normal);
-	if (intensity > 0.95)
-		intensity = 0.95;
-	else if (intensity > 0.5)
-		intensity = 0.5;
-	else if (intensity > 0.25)
-		intensity = 0.25;
-	else
-		intensity = 0;
-	diffuseSum = diffuseSum + float4(Light0DiffuseColor, 1) * intensity * DiffuseIntensity;
-			
-	intensity = dot(-Light1Direction, normal);
-	if (intensity > 0.95)
-		intensity = 0.95;
-	else if (intensity > 0.5)
-		intensity = 0.5;
-	else if (intensity > 0.25)
-		intensity = 0.25;
-	else
-		intensity = 0;
-
-	diffuseSum = diffuseSum + float4(Light1DiffuseColor, 1) * intensity * DiffuseIntensity;
-		
-	intensity = dot(-Light2Direction, normal);
-	if (intensity > 0.95)
-		intensity = 0.95;
-	else if (intensity > 0.5)
-		intensity = 0.5;
-	else if (intensity > 0.25)
-		intensity = 0.25;
-	else
-		intensity = 0;
-
-	diffuseSum = diffuseSum + float4(Light2DiffuseColor, 1) * intensity * DiffuseIntensity;
-	
-	return ambientSum + diffuseSum;
+	float diffuse = saturate(dot(-Light0Direction, normal));
+	float2 intensityCoordinate = float2(diffuse, 0);
+	float4 intensity = tex2D(ColorMapSampler, intensityCoordinate);
+	diffuseSum = diffuseSum + float4(Light0DiffuseColor, 1) * diffuse * DiffuseIntensity;
+	cellSum = diffuseSum + float4(Light0DiffuseColor, 1) * intensity * DiffuseIntensity;
+	cellSum[3] = 1;
+	return ambientSum + cellSum;
 }
 
 technique TerrainToonShader

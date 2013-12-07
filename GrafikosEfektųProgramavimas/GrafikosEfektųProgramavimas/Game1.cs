@@ -13,6 +13,7 @@ namespace GrafikosEfektųProgramavimas
 {
     public class Game1 : Microsoft.Xna.Framework.Game
     {
+        #region parameters
         GraphicsDeviceManager graphics;
         Vector3 cameraPosition;
         Vector3 lookAt;
@@ -23,16 +24,19 @@ namespace GrafikosEfektųProgramavimas
         Dictionary<String, Texture2D> normalTextures;
         Dictionary<String, Texture2D> lightMapTextures;
         Model skybox;
-        Model terrain;
+        Texture2D CellMap;
         float SpecularToggle;
         float NormalToggle;
         float LightMapToggle;
         float aspectRatio;
-        float colorMultiplicationToggle;        
-        
+        float colorMultiplicationToggle;
+        Effect SobelShader;
         RasterizerState invertedCulling;
         RasterizerState normalCulling;
 
+        RenderTarget2D RenderTarget;
+        Texture2D RenderBuffer;
+        #endregion
         #region initialization
         public Game1()
         {
@@ -58,8 +62,6 @@ namespace GrafikosEfektųProgramavimas
             
             normalCulling = new RasterizerState();
             normalCulling.CullMode = CullMode.CullCounterClockwiseFace;
-
-
         }
 
         public static String ParseMeshName(String name)
@@ -76,13 +78,12 @@ namespace GrafikosEfektųProgramavimas
             projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.10f, 100000.0f);
            
         }
+        #endregion
 
+        #region content loading
         protected override void LoadContent()
         {
-           
-            var model = Content.Load<Model>("cube2");
-            terrain = Content.Load<Model>("large_heightmap");
-            models.Add(model);
+            var terrain = Content.Load<Model>("large_heightmap");
             models.Add(terrain);
             skybox = Content.Load<Model>("skybox2");
 
@@ -108,6 +109,20 @@ namespace GrafikosEfektųProgramavimas
                //specularTextures.Add(textureName, Content.Load<Texture2D>(textureName + "_SPEC"));
                normalTextures.Add(textureName, Content.Load<Texture2D>(textureName + "_NORM"));
             }
+
+           CellMap = Content.Load<Texture2D>("celMap");
+           PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
+           RenderTarget = new RenderTarget2D(graphics.GraphicsDevice, pp.BackBufferWidth, pp.BackBufferHeight, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
+
+           float width = 1.0f / (float)pp.BackBufferWidth;
+           float height = 1.0f / (float)pp.BackBufferHeight;
+           SobelShader = Content.Load<Effect>("SobelShader");
+           var pixelOffsetX = new Vector3(0, width, width * 2);
+           var pixelOffsetY = new Vector3(0, height, height * 2);
+
+            SobelShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
+            SobelShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
+
 
         }
 
@@ -145,9 +160,13 @@ namespace GrafikosEfektųProgramavimas
         #endregion
 
         #region rendering
+
         protected override void Draw(GameTime gameTime)
         {
+            GraphicsDevice.SetRenderTarget(RenderTarget);
+            GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
 
@@ -229,10 +248,21 @@ namespace GrafikosEfektųProgramavimas
                         effect.Parameters["AmbientIntensity"].SetValue(0.10f);
                   
                         effect.Parameters["CameraPosition"].SetValue(cameraPosition);
+                        effect.Parameters["CellMap"].SetValue(CellMap);
                             
                     }
                     mesh.Draw();
                 }
+            }
+            GraphicsDevice.SetRenderTarget(null);
+            RenderBuffer = (Texture2D)RenderTarget;
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.DarkSlateBlue, 1.0f, 0);
+            
+            using (SpriteBatch sprite = new SpriteBatch(GraphicsDevice))
+            {
+                sprite.Begin(0, BlendState.Opaque, null, null, null, SobelShader);
+                sprite.Draw(RenderBuffer, new Vector2(0, 0), Color.White);
+                sprite.End();
             }
             base.Draw(gameTime);
         }
