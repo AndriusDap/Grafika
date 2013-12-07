@@ -120,10 +120,8 @@ namespace GrafikosEfektųProgramavimas
            var pixelOffsetX = new Vector3(0, width, width * 2);
            var pixelOffsetY = new Vector3(0, height, height * 2);
 
-            SobelShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
-            SobelShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
-
-
+           SobelShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
+           SobelShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
         }
 
 
