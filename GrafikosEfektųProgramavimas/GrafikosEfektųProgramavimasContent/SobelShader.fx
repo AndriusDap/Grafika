@@ -35,7 +35,7 @@
 			 nearbyPixels[x][y] = tex2D(SceneSampler, texCoord + float2(pixelOffsetX[x], pixelOffsetY[y]));
 		 }
 	  }
-      int clipped = round(sobelSum(nearbyPixels) + 0.10f);
+      int clipped = round(sobelSum(nearbyPixels) + 0.20f);
 	  float result = !clipped;
       return tex2D(SceneSampler, texCoord) * float4(result.xxx, 1);
    }
