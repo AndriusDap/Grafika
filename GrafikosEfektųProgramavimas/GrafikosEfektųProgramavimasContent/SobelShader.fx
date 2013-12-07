@@ -1,7 +1,16 @@
    sampler SceneSampler : register(s0);
 
-   float3x3 sobelKernelX = { 1, 0, -1, 2, 0, -2, 1, 0, -1};
-   float3x3 sobelKernelY = { 1, 2, 1, 0, 0, 0, -1, -2, -1};
+
+   #if 1
+		//Sobel kernel
+	   float3x3 kernelx =  { 1, 0, -1, 2, 0, -2, 1, 0, -1};
+	   float3x3 kernely = { 1, 2, 1, 0, 0, 0, -1, -2, -1};
+   #else
+		// Scharr kernel
+	   float3x3 kernelx = {3, 10, 3, 0, 0, 0, -3, -10, -3};
+	   float3x3 kernely = {3, 0, -3, 10, 0, -10, 3, 0, -3};
+   #endif
+
    float sobelSum(float3x3 pixels)
    {
 	 float ColorX = 0;
@@ -13,8 +22,8 @@
 		[unroll]
 		for(int y = 0; y < 3; y++)
 		{
-			ColorX += sobelKernelY[x][y] * pixels[x][y];
-			ColorY += sobelKernelX[x][y] * pixels[x][y];
+			ColorX += kernely[x][y] * pixels[x][y];
+			ColorY += kernelx[x][y] * pixels[x][y];
 		}
 	 }
 	 return sqrt(ColorX * ColorX + ColorY * ColorY);
