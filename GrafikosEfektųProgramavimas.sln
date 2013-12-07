@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrafikosEfektųProgramavimas", "GrafikosEfektųProgramavimas\GrafikosEfektųProgramavimas\GrafikosEfektųProgramavimas.csproj", "{3C2F6E49-7303-4585-B303-ED838F3BBB72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrafikosEfektųProgramavimasContent", "GrafikosEfektųProgramavimas\GrafikosEfektųProgramavimasContent\GrafikosEfektųProgramavimasContent.contentproj", "{F640E450-FA03-4BFB-99A0-5C81157BA790}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentPipelineExtension", "ContentPipelineExtension\ContentPipelineExtension.csproj", "{3B73D0B5-68C2-461D-AD76-8A70C3B5F3A0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3C2F6E49-7303-4585-B303-ED838F3BBB72}.Debug|x86.ActiveCfg = Debug|x86
+		{3C2F6E49-7303-4585-B303-ED838F3BBB72}.Debug|x86.Build.0 = Debug|x86
+		{3C2F6E49-7303-4585-B303-ED838F3BBB72}.Release|x86.ActiveCfg = Release|x86
+		{3C2F6E49-7303-4585-B303-ED838F3BBB72}.Release|x86.Build.0 = Release|x86
+		{F640E450-FA03-4BFB-99A0-5C81157BA790}.Debug|x86.ActiveCfg = Debug|x86
+		{F640E450-FA03-4BFB-99A0-5C81157BA790}.Release|x86.ActiveCfg = Release|x86
+		{3B73D0B5-68C2-461D-AD76-8A70C3B5F3A0}.Debug|x86.ActiveCfg = Debug|x86
+		{3B73D0B5-68C2-461D-AD76-8A70C3B5F3A0}.Debug|x86.Build.0 = Debug|x86
+		{3B73D0B5-68C2-461D-AD76-8A70C3B5F3A0}.Release|x86.ActiveCfg = Debug|x86
+		{3B73D0B5-68C2-461D-AD76-8A70C3B5F3A0}.Release|x86.Build.0 = Debug|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
