@@ -71,7 +71,7 @@ namespace GrafikosEfektųProgramavimas
 
         public void Render(Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
-           // UpdateMatrix();
+            UpdateMatrix();
             foreach (ModelMesh mesh in ObjectModel.Meshes)
             {
                 foreach (Effect effect in mesh.Effects)
