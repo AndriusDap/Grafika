@@ -37,6 +37,7 @@ namespace GrafikosEfektųProgramavimas
         RenderTarget2D RenderTarget;
         Texture2D RenderBuffer;
         #endregion
+
         #region initialization
         public Game1()
         {
@@ -117,8 +118,8 @@ namespace GrafikosEfektųProgramavimas
            float width = 1.0f / (float)pp.BackBufferWidth;
            float height = 1.0f / (float)pp.BackBufferHeight;
            SobelShader = Content.Load<Effect>("SobelShader");
-           var pixelOffsetX = new Vector3(0, width, width * 2);
-           var pixelOffsetY = new Vector3(0, height, height * 2);
+           var pixelOffsetX = new Vector3(-width, 0, width);
+           var pixelOffsetY = new Vector3(-height, 0, height);
 
            SobelShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
            SobelShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);

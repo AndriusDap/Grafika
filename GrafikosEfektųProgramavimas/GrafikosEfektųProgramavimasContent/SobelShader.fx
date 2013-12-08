@@ -1,14 +1,16 @@
    sampler SceneSampler : register(s0);
 
 
-   #if 1
+   #if 0
 		//Sobel kernel
 	   float3x3 kernelx =  { 1, 0, -1, 2, 0, -2, 1, 0, -1};
 	   float3x3 kernely = { 1, 2, 1, 0, 0, 0, -1, -2, -1};
+	   float offset = 0.2f;
    #else
 		// Scharr kernel
 	   float3x3 kernelx = {3, 10, 3, 0, 0, 0, -3, -10, -3};
 	   float3x3 kernely = {3, 0, -3, 10, 0, -10, 3, 0, -3};
+	   float offset = -0.2f;
    #endif
 
    float sobelSum(float3x3 pixels)
@@ -44,7 +46,7 @@
 			 nearbyPixels[x][y] = tex2D(SceneSampler, texCoord + float2(pixelOffsetX[x], pixelOffsetY[y]));
 		 }
 	  }
-      int clipped = round(sobelSum(nearbyPixels) + 0.20f);
+      int clipped = round(sobelSum(nearbyPixels) + offset);
 	  float result = !clipped;
       return tex2D(SceneSampler, texCoord) * float4(result.xxx, 1);
    }
