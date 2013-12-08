@@ -51,6 +51,11 @@ namespace GrafikosEfektųProgramavimas
             dirty = true;
         }
 
+        public RenderableObject(Model model) : this()
+        {
+            ObjectModel = model;
+        }
+
         private void UpdateMatrix()
         {
             if (dirty)
@@ -64,28 +69,34 @@ namespace GrafikosEfektųProgramavimas
             UpdateMatrix();
         }
 
-        public void Render(Matrix View, Matrix Projection)
+        public void Render(Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
-            UpdateMatrix();
+           // UpdateMatrix();
             foreach (ModelMesh mesh in ObjectModel.Meshes)
             {
                 foreach (Effect effect in mesh.Effects)
                 {
+
+                    effect.Parameters["World"].SetValue(world);
                     effect.Parameters["Model"].SetValue(ModelMatrix);                    
                     effect.Parameters["View"].SetValue(View);
                     effect.Parameters["Projection"].SetValue(Projection);
+                    effect.Parameters["CameraPosition"].SetValue(CameraPosition);
                 }
                 mesh.Draw();
             }
         }
 
-        public void Render(Effect customShader, Matrix View, Matrix Projection)
+        public void Render(Effect customShader, Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
             UpdateMatrix();
             
+            
+            customShader.Parameters["World"].SetValue(world);
             customShader.Parameters["Model"].SetValue(ModelMatrix);
             customShader.Parameters["View"].SetValue(View);
             customShader.Parameters["Projection"].SetValue(Projection);
+            customShader.Parameters["CameraPosition"].SetValue(CameraPosition);
             foreach (ModelMesh mesh in ObjectModel.Meshes)
             {
                 customShader.CurrentTechnique.Passes[0].Apply();
@@ -93,13 +104,13 @@ namespace GrafikosEfektųProgramavimas
             }
         }
 
-        public void SetUpEffects(Func<Effect, Object> SetUpFunction)
+        public void SetUpEffects(Func<Effect, ModelMesh, Object> SetUpFunction)
         {
             foreach (ModelMesh mesh in ObjectModel.Meshes)
             {
                 foreach (Effect effect in mesh.Effects)
                 {
-                    SetUpFunction(effect);
+                    SetUpFunction(effect, mesh);
                 }
             }
         }

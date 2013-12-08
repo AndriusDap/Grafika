@@ -17,18 +17,13 @@ namespace GrafikosEfektųProgramavimas
         Vector3 cameraPosition;
         Vector3 lookAt;
         Matrix projection;
-        List<Model> models;
+        List<RenderableObject> models;
         Dictionary<String, Texture2D> textures;
         Dictionary<String, Texture2D> specularTextures;
         Dictionary<String, Texture2D> normalTextures;
         Dictionary<String, Texture2D> lightMapTextures;
         Model skybox;
-        Model terrain;
-        float SpecularToggle;
-        float NormalToggle;
-        float LightMapToggle;
-        float aspectRatio;
-        float colorMultiplicationToggle;        
+        float aspectRatio;    
         
         RasterizerState invertedCulling;
         RasterizerState normalCulling;
@@ -43,24 +38,15 @@ namespace GrafikosEfektųProgramavimas
             graphics.PreferredBackBufferWidth = 1600;
             graphics.ApplyChanges();
             Content.RootDirectory = "Content";
-            models = new List<Model>();
+            models = new List<RenderableObject>();
             textures = new Dictionary<String, Texture2D>();
-            specularTextures = new Dictionary<String, Texture2D>();
             normalTextures = new Dictionary<String, Texture2D>();
-            lightMapTextures = new Dictionary<String, Texture2D>();
-            SpecularToggle = 1;
-            NormalToggle = 1;
-            LightMapToggle = 1;
-
-           
+                  
             invertedCulling = new RasterizerState();
             invertedCulling.CullMode = CullMode.CullClockwiseFace;
             
             normalCulling = new RasterizerState();
             normalCulling.CullMode = CullMode.CullCounterClockwiseFace;
-           
-
-
         }
 
         public static String ParseMeshName(String name)
@@ -81,16 +67,14 @@ namespace GrafikosEfektųProgramavimas
         protected override void LoadContent()
         {
            
-            var model = Content.Load<Model>("cube2");
-            terrain = Content.Load<Model>("large_heightmap");
-            models.Add(model);
-            models.Add(terrain);
+            var terrain = Content.Load<Model>("large_heightmap");
+            models.Add(new RenderableObject(terrain));
             skybox = Content.Load<Model>("skybox2");
 
             List<String> textureNames = new List<String>();
             foreach (var m in models)
             {
-                foreach (var mesh in m.Meshes)
+                foreach (var mesh in m.ObjectModel.Meshes)
                 {
                     if (mesh.Name.Contains('_'))
                     {
@@ -106,8 +90,42 @@ namespace GrafikosEfektųProgramavimas
             foreach (var textureName in textureNames)
             {
                textures.Add(textureName, Content.Load<Texture2D>(textureName+"_DIFF"));
-               //specularTextures.Add(textureName, Content.Load<Texture2D>(textureName + "_SPEC"));
                normalTextures.Add(textureName, Content.Load<Texture2D>(textureName + "_NORM"));
+            }
+
+            // Set up shaders for created models:
+            foreach (var model in models)
+            {
+                model.SetUpEffects((effect, mesh) =>
+                    {
+                        effect.Parameters["DiffuseIntensity"].SetValue(0.50f);
+
+                        String parsedMeshName = ParseMeshName(mesh.Name);
+                        effect.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
+                        effect.Parameters["NormalMap"].SetValue(normalTextures[parsedMeshName]);
+
+                        // Key light.
+                        effect.Parameters["Light0Direction"].SetValue(new Vector3(-0.5265408f, -0.5735765f, -0.6275069f));
+                        effect.Parameters["Light0DiffuseColor"].SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+                        effect.Parameters["Light0SpecularColor"].SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+
+                        // Fill light.
+                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.7198464f, 0.3420201f, 0.6040227f));
+                        effect.Parameters["Light1DiffuseColor"].SetValue(new Vector3(0.9647059f, 0.7607844f, 0.4078432f));
+                        effect.Parameters["Light1SpecularColor"].SetValue(Vector3.Zero);
+
+                        // Back light.
+                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.4545195f, -0.7660444f, 0.4545195f));
+                        effect.Parameters["Light1DiffuseColor"].SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+                        effect.Parameters["Light1SpecularColor"].SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+
+                        // Ambient light.
+                        effect.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());
+                        effect.Parameters["AmbientIntensity"].SetValue(0.10f);
+                  
+                        // Could not find out how to return nothing with lambda
+                        return null;
+                    });
             }
 
         }
@@ -128,9 +146,6 @@ namespace GrafikosEfektųProgramavimas
                 this.Exit();
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 this.Exit();
-            SpecularToggle = Keyboard.GetState().IsKeyDown(Keys.NumPad1) ? 0 : 1;
-            NormalToggle = Keyboard.GetState().IsKeyDown(Keys.NumPad2) ? 0 : 1;
-            LightMapToggle = Keyboard.GetState().IsKeyDown(Keys.NumPad3) ? 0 : 1;
             float speed = 0.001f;
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
             {
@@ -177,67 +192,10 @@ namespace GrafikosEfektųProgramavimas
             }
             //restore culling
             GraphicsDevice.RasterizerState = normalCulling;
-            
-           /* foreach (ModelMesh mesh in terrain.Meshes)
-            {
-
-                foreach (BasicEffect effect in mesh.Effects)
-                {
-                    effect.EnableDefaultLighting();
-                    effect.View = view;
-                    effect.Projection = projection;
-                    effect.World = world;
-                }
-                mesh.Draw();
-            }*/
 
             foreach (var model in models)
             {
-                foreach (var mesh in model.Meshes)
-                {
-                    var x = mesh.Name;
-                    var a = x.Length;
-                    foreach (Effect effect in mesh.Effects)
-                    {
-                        String parsedMeshName = ParseMeshName(mesh.Name);
-                        effect.Parameters["SpecularToggle"].SetValue(SpecularToggle);
-                        effect.Parameters["NormalToggle"].SetValue(NormalToggle);
-                        effect.Parameters["LightMapToggle"].SetValue(LightMapToggle);
-
-                        effect.Parameters["World"].SetValue(world);
-                        effect.Parameters["Projection"].SetValue(projection);
-                        effect.Parameters["View"].SetValue(view);
-                        effect.Parameters["DiffuseIntensity"].SetValue(0.50f);
-
-                       
-                        effect.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
-                      //  effect.Parameters["SpecularTexture"].SetValue(specularTextures[parsedMeshName]);
-                        effect.Parameters["NormalMap"].SetValue(normalTextures[parsedMeshName]);
-
-                        // Key light.
-                        effect.Parameters["Light0Direction"].SetValue(new Vector3(-0.5265408f, -0.5735765f, -0.6275069f));
-                        effect.Parameters["Light0DiffuseColor"].SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
-                        effect.Parameters["Light0SpecularColor"].SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
-
-                        // Fill light.
-                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.7198464f, 0.3420201f, 0.6040227f));
-                        effect.Parameters["Light1DiffuseColor"].SetValue(new Vector3(0.9647059f, 0.7607844f, 0.4078432f));
-                        effect.Parameters["Light1SpecularColor"].SetValue(Vector3.Zero);
-
-                        // Back light.
-                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.4545195f, -0.7660444f, 0.4545195f));
-                        effect.Parameters["Light1DiffuseColor"].SetValue( new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
-                        effect.Parameters["Light1SpecularColor"].SetValue( new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
-
-                        // Ambient light.
-                        effect.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());//new Vector3(0.05333332f, 0.09882354f, 0.1819608f));
-                        effect.Parameters["AmbientIntensity"].SetValue(0.10f);
-                  
-                        effect.Parameters["CameraPosition"].SetValue(cameraPosition);
-                            
-                    }
-                    mesh.Draw();
-                }
+                model.Render(view, projection, world, cameraPosition);
             }
             base.Draw(gameTime);
         }
