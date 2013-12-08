@@ -67,14 +67,14 @@ namespace GrafikosEfektųProgramavimas
         {
             base.Initialize();
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
-            cameraPosition = new Vector3(-200, -50, -500);
+            cameraPosition = new Vector3(225.55567f, -28.41866f, 203.4635f);
             lookAt = cameraPosition + Vector3.UnitX;
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.10f, 100000.0f);
-            SunPosition = new Vector3(-200, -50, -500);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f, 1.0f, 50000.0f);
+            //projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.10f, 100000.0f);
+            SunPosition = new Vector3(225.55567f, -28.41866f, 203.4635f);
 
-           
-            SunLookAt = Matrix.CreateLookAt(SunPosition, SunPosition + Vector3.Left, Vector3.Up);
-            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f, 1.0f, 500.0f);
+            SunLookAt = Matrix.CreateLookAt(SunPosition, SunPosition + Vector3.UnitX, Vector3.Up);
+            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f, 1.0f, 50000.0f);
             var pp = graphics.GraphicsDevice.PresentationParameters;
             var height = pp.BackBufferHeight;
             var width = pp.BackBufferWidth;
@@ -272,7 +272,8 @@ namespace GrafikosEfektųProgramavimas
             {
                 model.Render(depthshader, SunLookAt, SunProjection, Matrix.Identity, SunPosition);
             }
-
+            //base.Draw(gameTime);
+            //return;  
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
 

@@ -35,6 +35,16 @@ sampler DiffuseTextureSampler = sampler_state {  texture = <DiffuseTexture> ; ma
 Texture NormalMap;
 sampler NormalMapSampler = sampler_state { texture = <NormalMap>; magFilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
 
+
+
+float4 GetPositionFromLight(float4 position)
+{
+    float4x4 WorldViewProjection =
+     mul(mul(Model, LightView), LightProjection);
+    return mul(position, WorldViewProjection);  
+}
+
+
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
@@ -45,7 +55,7 @@ struct VertexShaderOutput
 	float4 Position : POSITION0;
 	float3 Normal : TEXCOORD0;
 	float2 TexCoords : TEXCOORD2;
-	float4 PositionInLight : TEXCOORD3;
+	float4 OriginalPosition : TEXCOORD3;
 };
 
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal : NORMAL, float2 TexCoords : TEXCOORD0)
@@ -62,7 +72,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal :
 	float4x4 LightWorldViewProj = mul(Model, LightView);
 	LightWorldViewProj = mul(LightWorldViewProj, LightProjection);
 
-	output.PositionInLight = mul(input.Position, LightWorldViewProj);
+	output.OriginalPosition = input.Position;
 	return output;
 }
 
@@ -76,17 +86,23 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 
 	float4 normal = float4(input.Normal, 1);
 
-	float2 ProjectedTexCoords;
-	ProjectedTexCoords[0] = input.PositionInLight.x/input.PositionInLight.w/2.0f + 0.5f;
-    ProjectedTexCoords[1] = -input.PositionInLight.y/input.PositionInLight.w/2.0f + 0.5f;
+	float4 lightingPosition = GetPositionFromLight(input.OriginalPosition); // Our position on the shadow map
+	float2 ShadowTexC = 0.5 * lightingPosition.xy / lightingPosition.w + float2( 0.5, 0.5 );
+	ShadowTexC.y = 1.0f - ShadowTexC.y;
 	float Brightness = DiffuseIntensity;
-    float ShadowDepth = tex2D(ShadowMapSampler, ProjectedTexCoords).r;
-	float RealDepth = input.PositionInLight.x/input.PositionInLight.w/2.0f; 
-	if((RealDepth - 0.01f) <= ShadowDepth)
-	{
-		Brightness = 0.0f;
-	}
+	float shadowdepth = tex2D(ShadowMapSampler, ShadowTexC).r;    
 
+	// Check our value against the depth value
+	float ourdepth = 1 - (lightingPosition.z / lightingPosition.w);
+
+	// Check the shadowdepth against the depth of this pixel
+	// a fudge factor is added to account for floating-point error
+	if (shadowdepth-0.03 >= ourdepth)
+	{
+		// we're in shadow, cut the light
+		Brightness = 0.1;
+	};
+	
 	float4 diffuse = saturate(dot(-Light0Direction, normal));
 	diffuseSum = diffuseSum + (float4(Light0DiffuseColor, 1) * diffuse) * Brightness;
 			

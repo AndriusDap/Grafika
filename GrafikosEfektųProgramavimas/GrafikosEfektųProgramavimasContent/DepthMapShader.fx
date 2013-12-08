@@ -11,8 +11,8 @@ struct VertexShaderInput
 
 struct VertexShaderOutput
 {
-	float4 Position		:POSITION;
-	float4 Position2D	:TEXCOORD0;
+	float4 Position	:POSITION;
+	float Depth	:TEXCOORD0;
 };
 
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
@@ -23,16 +23,14 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	WorldViewProj = mul(WorldViewProj, Projection);
 
 	output.Position = mul(input.Position, WorldViewProj);
-	output.Position2D = input.Position;
+	output.Depth.x = (1 - (output.Position.z/output.Position.w)) * 5; 
 
 	return output;
 }
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
-	float4 output = float4(0, 0, 0, 1);
-	output.r = input.Position2D.z / input.Position2D.w;
-	return output;
+	return float4(input.Depth, 0, 1, 1);
 }
 
 technique DepthMapShader
