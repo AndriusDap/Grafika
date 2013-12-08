@@ -68,6 +68,26 @@ namespace GrafikosEfektųProgramavimas
             models.Add(new RenderableObject(terrain));
             skybox = Content.Load<Model>("skybox2");
 
+            var cube = Content.Load<Model>("cube2");
+            var renderable = new RenderableObject(cube);
+            renderable.Position = new Vector3(-210, -50, -510);
+            models.Add(renderable);
+
+            renderable = new RenderableObject(cube);
+            renderable.Position = new Vector3(-210, -56, -510);
+            models.Add(renderable);
+            
+            renderable = new RenderableObject(cube);
+            renderable.Position = new Vector3(-220, -56, -510);
+            models.Add(renderable);
+            
+            renderable = new RenderableObject(cube);
+            renderable.Position = new Vector3(-210, -56, -520);
+            models.Add(renderable);
+
+            renderable = new RenderableObject(cube);
+            renderable.Position = new Vector3(-220, -56, -520);
+            models.Add(renderable);
             List<String> textureNames = new List<String>();
             foreach (var m in models)
             {
@@ -101,22 +121,22 @@ namespace GrafikosEfektųProgramavimas
 
                         // Key light.
                         effect.Parameters["Light0Direction"].SetValue(new Vector3(-0.5265408f, -0.5735765f, -0.6275069f));
-                        effect.Parameters["Light0DiffuseColor"].SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
-                        effect.Parameters["Light0SpecularColor"].SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+                        effect.Parameters["Light0DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+                        effect.Parameters["Light0SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
 
                         // Fill light.
                         effect.Parameters["Light1Direction"].SetValue(new Vector3(0.7198464f, 0.3420201f, 0.6040227f));
-                        effect.Parameters["Light1DiffuseColor"].SetValue(new Vector3(0.9647059f, 0.7607844f, 0.4078432f));
-                        effect.Parameters["Light1SpecularColor"].SetValue(Vector3.Zero);
+                        effect.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.9647059f, 0.7607844f, 0.4078432f));
+                        effect.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(Vector3.Zero);
 
                         // Back light.
                         effect.Parameters["Light1Direction"].SetValue(new Vector3(0.4545195f, -0.7660444f, 0.4545195f));
-                        effect.Parameters["Light1DiffuseColor"].SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
-                        effect.Parameters["Light1SpecularColor"].SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+                        effect.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+                        effect.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
 
                         // Ambient light.
-                        effect.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());
-                        effect.Parameters["AmbientIntensity"].SetValue(0.10f);
+                        effect.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());//
+                        effect.Parameters["AmbientIntensity"].SetValue(0.30f);
                   
                         // Could not find out how to return nothing with lambda
                         return null;
@@ -141,10 +161,10 @@ namespace GrafikosEfektųProgramavimas
                 this.Exit();
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 this.Exit();
-            float speed = 0.001f;
+            float speed = 0.01f;
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
             {
-                speed *= 100f;
+                speed *= 10f;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Space))
             {
