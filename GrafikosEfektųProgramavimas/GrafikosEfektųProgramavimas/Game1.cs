@@ -40,7 +40,7 @@ namespace GrafikosEfektųProgramavimas
             graphics.PreferMultiSampling = true;
             graphics.IsFullScreen = false;
             graphics.PreferredBackBufferHeight = 900;
-            graphics.PreferredBackBufferWidth = 900;
+            graphics.PreferredBackBufferWidth = 1600;
             graphics.ApplyChanges();
             Content.RootDirectory = "Content";
             models = new List<Model>();
@@ -58,6 +58,7 @@ namespace GrafikosEfektųProgramavimas
             
             normalCulling = new RasterizerState();
             normalCulling.CullMode = CullMode.CullCounterClockwiseFace;
+           
 
 
         }
@@ -71,8 +72,8 @@ namespace GrafikosEfektųProgramavimas
         {
             base.Initialize();
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
-            cameraPosition = new Vector3(3, 0, 0);
-            lookAt = new Vector3(0, 0, 0);
+            cameraPosition = new Vector3(-200, -50, -500);
+            lookAt = cameraPosition + Vector3.UnitX;
             projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.10f, 100000.0f);
            
         }
@@ -140,6 +141,10 @@ namespace GrafikosEfektųProgramavimas
                 speed = 1;
             }
             CameraControl.Hover(cameraPosition, lookAt, (float) (gameTime.ElapsedGameTime.TotalMilliseconds * speed));
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+            {
+                var position = cameraPosition;
+            }
             base.Update(gameTime);
         }
         #endregion
