@@ -89,8 +89,7 @@ namespace GrafikosEfektųProgramavimas
 
         public void Render(Effect customShader, Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
-            UpdateMatrix();
-            
+            UpdateMatrix();           
             
             customShader.Parameters["World"].SetValue(world);
             customShader.Parameters["Model"].SetValue(ModelMatrix);

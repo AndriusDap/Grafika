@@ -20,7 +20,6 @@ namespace GrafikosEfektųProgramavimas
         List<RenderableObject> models;
         Dictionary<String, Texture2D> textures;
         Dictionary<String, Texture2D> specularTextures;
-        Dictionary<String, Texture2D> normalTextures;
         Dictionary<String, Texture2D> lightMapTextures;
         Model skybox;
         float aspectRatio;    
@@ -39,9 +38,7 @@ namespace GrafikosEfektųProgramavimas
             graphics.ApplyChanges();
             Content.RootDirectory = "Content";
             models = new List<RenderableObject>();
-            textures = new Dictionary<String, Texture2D>();
-            normalTextures = new Dictionary<String, Texture2D>();
-                  
+            textures = new Dictionary<String, Texture2D>();                  
             invertedCulling = new RasterizerState();
             invertedCulling.CullMode = CullMode.CullClockwiseFace;
             
@@ -90,7 +87,6 @@ namespace GrafikosEfektųProgramavimas
             foreach (var textureName in textureNames)
             {
                textures.Add(textureName, Content.Load<Texture2D>(textureName+"_DIFF"));
-               normalTextures.Add(textureName, Content.Load<Texture2D>(textureName + "_NORM"));
             }
 
             // Set up shaders for created models:
@@ -102,7 +98,6 @@ namespace GrafikosEfektųProgramavimas
 
                         String parsedMeshName = ParseMeshName(mesh.Name);
                         effect.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
-                        effect.Parameters["NormalMap"].SetValue(normalTextures[parsedMeshName]);
 
                         // Key light.
                         effect.Parameters["Light0Direction"].SetValue(new Vector3(-0.5265408f, -0.5735765f, -0.6275069f));
