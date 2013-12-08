@@ -78,12 +78,10 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	diffuse = saturate(dot(-Light2Direction, normal));
 	diffuseSum = diffuseSum + float4(Light2DiffuseColor, 1) * diffuse * DiffuseIntensity;
 	
-	float4 result = ambientSum + diffuseSum;
-	result.z = 1.0f;
-	return result;
+	return float4(1.0, 0.0, 0.0, 0.0);
 }
 
-technique BasicLight
+technique TerrainShader
 {
 	pass Pass1
 	{

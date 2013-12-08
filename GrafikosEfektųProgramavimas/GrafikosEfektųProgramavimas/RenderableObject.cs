@@ -86,20 +86,26 @@ namespace GrafikosEfektųProgramavimas
                 mesh.Draw();
             }
         }
-
+        Effect DefaultEffect;
         public void Render(Effect customShader, Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
-            UpdateMatrix();           
-            
-            customShader.Parameters["World"].SetValue(world);
-            customShader.Parameters["Model"].SetValue(ModelMatrix);
-            customShader.Parameters["View"].SetValue(View);
-            customShader.Parameters["Projection"].SetValue(Projection);
-            customShader.Parameters["CameraPosition"].SetValue(CameraPosition);
             foreach (ModelMesh mesh in ObjectModel.Meshes)
             {
-                customShader.CurrentTechnique.Passes[0].Apply();
-                mesh.Draw();
+                foreach (ModelMeshPart part in mesh.MeshParts)
+                {
+                    DefaultEffect = part.Effect;
+                    part.Effect = customShader;
+                }
+            }
+
+            Render(View, Projection, world, CameraPosition);
+
+            foreach (ModelMesh mesh in ObjectModel.Meshes)
+            {
+                foreach (ModelMeshPart part in mesh.MeshParts)
+                {
+                    part.Effect = DefaultEffect;
+                }
             }
         }
 
