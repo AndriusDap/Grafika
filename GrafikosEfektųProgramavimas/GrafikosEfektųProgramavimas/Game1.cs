@@ -44,8 +44,8 @@ namespace GrafikosEfektųProgramavimas
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferMultiSampling = true;
             graphics.IsFullScreen = false;
-            graphics.PreferredBackBufferHeight = 900;
-            graphics.PreferredBackBufferWidth = 900;
+            graphics.PreferredBackBufferHeight = 600;
+            graphics.PreferredBackBufferWidth = 1200;
             graphics.ApplyChanges();
             Content.RootDirectory = "Content";
             models = new List<Model>();
@@ -144,10 +144,10 @@ namespace GrafikosEfektųProgramavimas
             SpecularToggle = Keyboard.GetState().IsKeyDown(Keys.NumPad1) ? 0 : 1;
             NormalToggle = Keyboard.GetState().IsKeyDown(Keys.NumPad2) ? 0 : 1;
             LightMapToggle = Keyboard.GetState().IsKeyDown(Keys.NumPad3) ? 0 : 1;
-            float speed = 0.001f;
+            float speed = 0.01f;
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
             {
-                speed *= 100f;
+                speed *= 10f;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Space))
             {
@@ -190,19 +190,7 @@ namespace GrafikosEfektųProgramavimas
             }
             //restore culling
             GraphicsDevice.RasterizerState = normalCulling;
-            
-           /* foreach (ModelMesh mesh in terrain.Meshes)
-            {
 
-                foreach (BasicEffect effect in mesh.Effects)
-                {
-                    effect.EnableDefaultLighting();
-                    effect.View = view;
-                    effect.Projection = projection;
-                    effect.World = world;
-                }
-                mesh.Draw();
-            }*/
 
             foreach (var model in models)
             {
