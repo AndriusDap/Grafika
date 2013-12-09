@@ -35,15 +35,15 @@ namespace GrafikosEfektųProgramavimas
 
         Effect shadowShader;
         Effect SumShader;
-        int ShadowMapSize = 2048;
+        int ShadowMapSize = 1024;
         #region initialization
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferMultiSampling = true;
             graphics.IsFullScreen = false;
-            graphics.PreferredBackBufferHeight = 900;
-            graphics.PreferredBackBufferWidth = 1600;
+            graphics.PreferredBackBufferHeight = 600;
+            graphics.PreferredBackBufferWidth = 1300;
             graphics.ApplyChanges();
             Content.RootDirectory = "Content";
             models = new List<RenderableObject>();
@@ -78,7 +78,7 @@ namespace GrafikosEfektųProgramavimas
             var pp = graphics.GraphicsDevice.PresentationParameters;
             var height = pp.BackBufferHeight;
             var width = pp.BackBufferWidth;
-            ShadowRenderTarget = new RenderTarget2D(graphics.GraphicsDevice, ShadowMapSize, ShadowMapSize, false, pp.BackBufferFormat, DepthFormat.Depth24Stencil8);
+            ShadowRenderTarget = new RenderTarget2D(graphics.GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
             for (int i = 0; i < RenderPasses.Length; i++)
             {
                 RenderPasses[i] = new RenderTarget2D(graphics.GraphicsDevice, width, height, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);

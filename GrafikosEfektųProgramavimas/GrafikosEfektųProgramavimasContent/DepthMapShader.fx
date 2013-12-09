@@ -23,7 +23,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	WorldViewProj = mul(WorldViewProj, Projection);
 
 	output.Position = mul(input.Position, WorldViewProj);
-	output.Depth.x = (1 - (output.Position.z/output.Position.w)) * 5; 
+	output.Depth.x = (1 - (output.Position.z/output.Position.w)); 
 
 	return output;
 }

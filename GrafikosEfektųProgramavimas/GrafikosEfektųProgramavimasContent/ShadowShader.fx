@@ -27,7 +27,7 @@ float4x4 LightView;
 float4x4 LightProjection;
 
 Texture ShadowTexture;
-sampler ShadowMapSampler = sampler_state {texture = <ShadowTexture>; magFilter = LINEAR; minfilter = LINEAR; mipfilter = LINEAR; AddressU = mirror; AddressV = mirror;};
+sampler ShadowMapSampler = sampler_state {texture = <ShadowTexture>; filter = Point; AddressU = mirror; AddressV = mirror;};
 
 Texture DiffuseTexture;
 sampler DiffuseTextureSampler = sampler_state {  texture = <DiffuseTexture> ; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
@@ -87,13 +87,13 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	float4 normal = float4(input.Normal, 1);
 
 	float4 lightingPosition = GetPositionFromLight(input.OriginalPosition); // Our position on the shadow map
-	float2 ShadowTexC = 0.5 * lightingPosition.xy / lightingPosition.w + float2( 0.5, 0.5 );
+	float2 ShadowTexC = 0.5 * lightingPosition.xy / lightingPosition.w + float2(0.5, 0.5);
 	ShadowTexC.y = 1.0f - ShadowTexC.y;
 	float Brightness = DiffuseIntensity;
 	float shadowdepth = tex2D(ShadowMapSampler, ShadowTexC).r;    
 
 	// Check our value against the depth value
-	float ourdepth = 1 - (lightingPosition.z / lightingPosition.w);
+	float ourdepth = (input.OriginalPosition.z / input.OriginalPosition.w);
 
 	// Check the shadowdepth against the depth of this pixel
 	// a fudge factor is added to account for floating-point error
@@ -112,7 +112,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	diffuse = saturate(dot(-Light2Direction, normal));
 	diffuseSum = diffuseSum + (float4(Light2DiffuseColor, 1) * diffuse) * Brightness;
 
-	return ambientSum + diffuseSum;;
+	return ambientSum + diffuseSum;
 }
 
 technique ShadowShader
