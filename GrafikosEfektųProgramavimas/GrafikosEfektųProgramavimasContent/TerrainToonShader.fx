@@ -58,7 +58,6 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal :
 	output.Normal = normalize(mul(Normal, World));
 	output.View = normalize(float4(CameraPosition, 1.0) - worldPosition);
 	output.TexCoords = TexCoords;
-
 	return output;
 }
 

@@ -29,7 +29,6 @@ namespace GrafikosEfektųProgramavimas
         float NormalToggle;
         float LightMapToggle;
         float aspectRatio;
-        float colorMultiplicationToggle;
         Effect SobelShader;
         RasterizerState invertedCulling;
         RasterizerState normalCulling;
@@ -212,7 +211,6 @@ namespace GrafikosEfektųProgramavimas
 
                        
                         effect.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
-                      //  effect.Parameters["SpecularTexture"].SetValue(specularTextures[parsedMeshName]);
                         effect.Parameters["NormalMap"].SetValue(normalTextures[parsedMeshName]);
 
                         // Key light.
