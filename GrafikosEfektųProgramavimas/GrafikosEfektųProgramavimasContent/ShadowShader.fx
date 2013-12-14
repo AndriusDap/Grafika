@@ -64,15 +64,17 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal :
 
 	float4x4 WorldViewProj = mul(Model, View);
 	WorldViewProj = mul(WorldViewProj, Projection);
+	output.OriginalPosition = mul(mul(input.Position, Model), World);
 
 	output.Position = mul(input.Position, WorldViewProj);
 	output.Normal = normalize(mul(Normal, World));
 	output.TexCoords = TexCoords;
 
-	float4x4 LightWorldViewProj = mul(Model, LightView);
+	float4x4 LightWorldViewProj = mul(mul(Model, World), LightView);
 	LightWorldViewProj = mul(LightWorldViewProj, LightProjection);
 
-	output.OriginalPosition = input.Position;
+	output.OriginalPosition = mul(input.Position, LightWorldViewProj);
+	
 	return output;
 }
 
@@ -86,18 +88,17 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 
 	float4 normal = float4(input.Normal, 1);
 
-	float4 lightingPosition = GetPositionFromLight(input.OriginalPosition); // Our position on the shadow map
-	float2 ShadowTexC = 0.5 * lightingPosition.xy / lightingPosition.w + float2(0.5, 0.5);
-	ShadowTexC.y = 1.0f - ShadowTexC.y;
+	float2 ShadowTexC = 0.5 * input.OriginalPosition.xy / input.OriginalPosition.w - float2(-0.5, 0.5);
+
 	float Brightness = DiffuseIntensity;
-	float shadowdepth = tex2D(ShadowMapSampler, ShadowTexC).r;    
+	float shadowdepth = 1 - tex2D(ShadowMapSampler, ShadowTexC).r;    
 
 	// Check our value against the depth value
-	float ourdepth = (input.OriginalPosition.z / input.OriginalPosition.w);
+	float ourdepth = abs(input.OriginalPosition.z / input.OriginalPosition.w);
 
 	// Check the shadowdepth against the depth of this pixel
 	// a fudge factor is added to account for floating-point error
-	if (shadowdepth-0.03 >= ourdepth)
+	if (shadowdepth <= (ourdepth-0.003))
 	{
 		// we're in shadow, cut the light
 		Brightness = 0.1;

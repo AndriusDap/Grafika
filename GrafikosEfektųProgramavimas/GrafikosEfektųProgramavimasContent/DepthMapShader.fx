@@ -19,18 +19,19 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 {
 	VertexShaderOutput output;
 
-	float4x4 WorldViewProj = mul(Model, View);
+	float4x4 WorldViewProj = mul(Model, World);
+	WorldViewProj = mul(WorldViewProj, View);
 	WorldViewProj = mul(WorldViewProj, Projection);
 
 	output.Position = mul(input.Position, WorldViewProj);
-	output.Depth.x = (1 - (output.Position.z/output.Position.w)); 
+	output.Depth.x = (output.Position.z/output.Position.w); 
 
 	return output;
 }
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
-	return float4(input.Depth, 0, 1, 1);
+	return float4(1 - input.Depth, 0, 0, 1);
 }
 
 technique DepthMapShader

@@ -21,7 +21,7 @@ namespace GrafikosEfektųProgramavimas
         Dictionary<String, Texture2D> textures;
         Model skybox;
         float aspectRatio;
-
+        Matrix World;
         Vector3 SunPosition;
         Matrix SunLookAt;
         Matrix SunProjection;
@@ -42,8 +42,8 @@ namespace GrafikosEfektųProgramavimas
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferMultiSampling = true;
             graphics.IsFullScreen = false;
-            graphics.PreferredBackBufferHeight = 600;
-            graphics.PreferredBackBufferWidth = 1300;
+            graphics.PreferredBackBufferHeight = 800;
+            graphics.PreferredBackBufferWidth = 800;
             graphics.ApplyChanges();
             Content.RootDirectory = "Content";
             models = new List<RenderableObject>();
@@ -67,14 +67,13 @@ namespace GrafikosEfektųProgramavimas
         {
             base.Initialize();
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
-            cameraPosition = new Vector3(225.55567f, -28.41866f, 203.4635f);
+            cameraPosition = new Vector3(0f, 0f, 0f);
             lookAt = cameraPosition + Vector3.UnitX;
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f, 1.0f, 50000.0f);
-            //projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.10f, 100000.0f);
-            SunPosition = new Vector3(225.55567f, -28.41866f, 203.4635f);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.001f, 5000.0f);
+            SunPosition = new Vector3(0, 0, 0);
 
             SunLookAt = Matrix.CreateLookAt(SunPosition, SunPosition + Vector3.UnitX, Vector3.Up);
-            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f, 1.0f, 50000.0f);
+            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f,  0.001f, 5000.0f);
             var pp = graphics.GraphicsDevice.PresentationParameters;
             var height = pp.BackBufferHeight;
             var width = pp.BackBufferWidth;
@@ -83,6 +82,8 @@ namespace GrafikosEfektųProgramavimas
             {
                 RenderPasses[i] = new RenderTarget2D(graphics.GraphicsDevice, width, height, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
             }
+            World = Matrix.Identity * Matrix.CreateScale(0.00001f);
+           
         }
         Effect depthshader;
         Effect Red;
@@ -262,7 +263,6 @@ namespace GrafikosEfektųProgramavimas
         #region rendering
         protected override void Draw(GameTime gameTime)
         {
-            var world = Matrix.Identity;
             var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
                         
             // ShadowMap pass:
@@ -270,16 +270,13 @@ namespace GrafikosEfektųProgramavimas
             GraphicsDevice.Clear(Color.Black);
             foreach (var model in models)
             {
-                model.Render(depthshader, SunLookAt, SunProjection, Matrix.Identity, SunPosition);
+                model.Render(depthshader, SunLookAt, SunProjection, World, SunPosition);
             }
-            //base.Draw(gameTime);
-            //return;  
+
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
 
-            int currentPass = 0;
             GraphicsDevice.SetRenderTarget(null);
-            //GraphicsDevice.SetRenderTarget(RenderPasses[currentPass++]);
             GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
             GraphicsDevice.Clear(Color.CornflowerBlue);
             // Shadow pass:
@@ -288,49 +285,10 @@ namespace GrafikosEfektųProgramavimas
             shadowShader.Parameters["ShadowTexture"].SetValue((Texture2D) ShadowRenderTarget);
             foreach (var model in models)
             {
-                model.Render(shadowShader, view, projection, world, cameraPosition);
-            }
-
-            base.Draw(gameTime);
-            return;            
-            GraphicsDevice.SetRenderTarget(RenderPasses[currentPass++]);
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-             //Render skybox first:
-            //Invert culling
-            GraphicsDevice.RasterizerState = invertedCulling;
-            var skyBoxWorld = Matrix.CreateScale(10000.0f) * Matrix.CreateTranslation(cameraPosition);
-            foreach (ModelMesh mesh in skybox.Meshes)
-            {
-
-                foreach (BasicEffect effect in mesh.Effects)
-                {
-                   // effect.DisableDefaultLighting();
-                    effect.View = view;
-                    effect.Projection = projection;
-                    effect.World = skyBoxWorld;
-                }
-                mesh.Draw();
-            }
-            //restore culling
-            GraphicsDevice.RasterizerState = normalCulling;
-
-            foreach (var model in models)
-            {
-                model.Render(view, projection, world, cameraPosition);
-            }
-
-            GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.DarkSlateBlue, 1.0f, 0);
-            
-            SumShader.Parameters["Pass0"].SetValue(RenderPasses[0]);
-            SumShader.Parameters["Pass1"].SetValue(RenderPasses[1]);
-            using (SpriteBatch sprite = new SpriteBatch(GraphicsDevice))
-            {
-                sprite.Begin(0, BlendState.AlphaBlend);//, null, null, null, SumShader);
-                sprite.Draw(ShadowRenderTarget, new Vector2(0, 0), Color.White);
-                sprite.End();
+                model.Render(shadowShader, view, projection, World, cameraPosition);
             }
             base.Draw(gameTime);
+            return;          
         }
         #endregion
     }
