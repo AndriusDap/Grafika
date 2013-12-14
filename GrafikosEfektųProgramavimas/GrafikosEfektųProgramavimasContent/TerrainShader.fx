@@ -22,6 +22,7 @@ float3 Light2SpecularColor;
 
 float3 AmbientLightColor;
 float AmbientIntensity;
+float TerrainLevel;
 
 Texture DiffuseTexture;
 sampler DiffuseTextureSampler = sampler_state {  texture = <DiffuseTexture> ; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
@@ -44,8 +45,9 @@ struct VertexShaderOutput
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal : NORMAL, float2 TexCoords : TEXCOORD0)
 {
 	VertexShaderOutput output;
-
-	float4 worldPosition = mul(input.Position, World);
+	output.Position = input.Position;
+	output.Position.y = output.Position.y * TerrainLevel;
+	float4 worldPosition = mul(output.Position, World);
 	float4 viewPosition = mul(worldPosition, View);
 	output.Position = mul(viewPosition, Projection);
 	output.Normal = normalize(mul(Normal, World));

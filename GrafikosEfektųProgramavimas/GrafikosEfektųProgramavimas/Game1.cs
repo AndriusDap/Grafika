@@ -20,13 +20,13 @@ namespace GrafikosEfektųProgramavimas
         Matrix world;
         List<RenderableObject> models;
         Dictionary<String, Texture2D> textures;
-        Dictionary<String, Texture2D> specularTextures;
-        Dictionary<String, Texture2D> lightMapTextures;
         Model skybox;
         float aspectRatio;    
         
         RasterizerState invertedCulling;
         RasterizerState normalCulling;
+
+        float TerrainLevel;
 
         #region initialization
         public Game1()
@@ -45,6 +45,7 @@ namespace GrafikosEfektųProgramavimas
             
             normalCulling = new RasterizerState();
             normalCulling.CullMode = CullMode.CullCounterClockwiseFace;
+            TerrainLevel = 1f;
         }
 
         public static String ParseMeshName(String name)
@@ -163,6 +164,14 @@ namespace GrafikosEfektųProgramavimas
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 this.Exit();
             float speed = 0.00001f;
+            if (Keyboard.GetState().IsKeyDown(Keys.V))
+            {
+                TerrainLevel += 0.5f; 
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.C))
+            {
+                TerrainLevel -= 0.5f;
+            }
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
             {
                 speed *= 10f;
@@ -206,11 +215,17 @@ namespace GrafikosEfektųProgramavimas
             }
             //restore culling
             GraphicsDevice.RasterizerState = normalCulling;
-
-            foreach (var model in models)
+            models[0].SetUpEffects((effect, mesh) =>
+                {
+                    effect.Parameters["TerrainLevel"].SetValue(TerrainLevel);
+                    return null;
+                }
+            );
+            for (int i = 0; i < models.Count; i++)
             {
-                model.Render(view, projection, world, cameraPosition);
+                models[i].Render(view, projection, world, cameraPosition);
             }
+            
             base.Draw(gameTime);
         }
         #endregion
