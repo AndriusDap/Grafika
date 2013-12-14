@@ -51,9 +51,9 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal :
 	WorldViewProj = mul(WorldViewProj, Projection);
 
 	output.Position = mul(input.Position, Model);
-	output.Position = mul(output.Position, View);
-	output.Position = mul(output.Position, Projection);
-	output.Normal = normalize(mul(Normal, World));
+	output.Position = mul(output.Position, WorldViewProj);
+
+	output.Normal = normalize(mul(Normal, mul(Model, World)));
 	output.TexCoords = TexCoords;
 
 	return output;

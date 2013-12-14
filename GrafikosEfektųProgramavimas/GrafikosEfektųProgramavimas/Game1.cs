@@ -17,6 +17,7 @@ namespace GrafikosEfektųProgramavimas
         Vector3 cameraPosition;
         Vector3 lookAt;
         Matrix projection;
+        Matrix world;
         List<RenderableObject> models;
         Dictionary<String, Texture2D> textures;
         Dictionary<String, Texture2D> specularTextures;
@@ -55,10 +56,10 @@ namespace GrafikosEfektųProgramavimas
         {
             base.Initialize();
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
-            cameraPosition = new Vector3(-200, -50, -500);
+            cameraPosition = new Vector3(0, 0, 0);
             lookAt = cameraPosition + Vector3.UnitX;
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.10f, 100000.0f);
-           
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.0001f, 100000.0f);
+            world = Matrix.CreateScale(1.0f/5000.0f);
         }
 
         protected override void LoadContent()
@@ -161,14 +162,14 @@ namespace GrafikosEfektųProgramavimas
                 this.Exit();
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 this.Exit();
-            float speed = 0.01f;
+            float speed = 0.00001f;
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
             {
                 speed *= 10f;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.Space))
             {
-                speed = 1;
+                speed *= 100f;
             }
             CameraControl.Hover(cameraPosition, lookAt, (float) (gameTime.ElapsedGameTime.TotalMilliseconds * speed));
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
@@ -185,8 +186,6 @@ namespace GrafikosEfektųProgramavimas
             GraphicsDevice.Clear(Color.CornflowerBlue);
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
-
-            var world = Matrix.Identity;
             var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
 
             //Render skybox first:
