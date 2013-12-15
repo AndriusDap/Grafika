@@ -1,7 +1,8 @@
 sampler SceneSampler : register(s0);
-float3x3 kernelx =  { 1, 0, -1, 2, 0, -2, 1, 0, -1};
-float3x3 kernely = { 1, 2, 1, 0, 0, 0, -1, -2, -1};
-float offset = 0.2f;
+float3x3 kernelx = {3, 10, 3, 0, 0, 0, -3, -10, -3};
+float3x3 kernely = {3, 0, -3, 10, 0, -10, 3, 0, -3};
+float offset = -0.3f;
+
 
    float sobelSum(float3x3 pixels)
    {

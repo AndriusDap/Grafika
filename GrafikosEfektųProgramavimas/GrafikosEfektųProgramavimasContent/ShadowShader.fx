@@ -23,6 +23,7 @@ float3 Light2SpecularColor;
 float3 AmbientLightColor;
 float AmbientIntensity;
 
+float FogEnabled = 1;
 float4x4 LightView;
 float4x4 LightProjection;
 
@@ -54,9 +55,16 @@ struct VertexShaderOutput
 {
 	float4 Position : POSITION0;
 	float3 Normal : TEXCOORD0;
-	float2 TexCoords : TEXCOORD2;
-	float4 OriginalPosition : TEXCOORD3;
+	float2 TexCoords : TEXCOORD1;
+	float4 OriginalPosition : TEXCOORD2;
+	float Fog : TEXCOORD3;
 };
+
+float ComputeFog(float3 position, float3 camera)
+{
+	float d = distance(position, camera);
+	return clamp((d - 100) / (2000 - 100), 0, 1) * FogEnabled;
+}
 
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal : NORMAL, float2 TexCoords : TEXCOORD0)
 {
@@ -74,7 +82,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal :
 	LightWorldViewProj = mul(LightWorldViewProj, LightProjection);
 
 	output.OriginalPosition = mul(input.Position, LightWorldViewProj);
-	
+	output.Fog = ComputeFog(output.Position, CameraPosition);
 	return output;
 }
 
@@ -101,7 +109,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	if (shadowdepth <= (ourdepth-0.003))
 	{
 		// we're in shadow, cut the light
-		Brightness = 0.1;
+		Brightness *= 0.5;
 	};
 	
 	float4 diffuse = saturate(dot(-Light0Direction, normal));
@@ -113,7 +121,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	diffuse = saturate(dot(-Light2Direction, normal));
 	diffuseSum = diffuseSum + (float4(Light2DiffuseColor, 1) * diffuse) * Brightness;
 
-	return ambientSum + diffuseSum;
+	return lerp(ambientSum + diffuseSum, float4(0.3, 0.3, 0.3, 1), input.Fog);
 }
 
 technique ShadowShader

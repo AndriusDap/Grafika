@@ -135,13 +135,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="red.fx">
-      <Name>red</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="ShadowShader.fx">
       <Name>ShadowShader</Name>
       <Importer>EffectImporter</Importer>
@@ -165,6 +158,20 @@
   <ItemGroup>
     <Compile Include="SobelShader.fx">
       <Name>SobelShader</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TerrainToonShader.fx">
+      <Name>TerrainToonShader</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ScharrShader.fx">
+      <Name>ScharrShader</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>

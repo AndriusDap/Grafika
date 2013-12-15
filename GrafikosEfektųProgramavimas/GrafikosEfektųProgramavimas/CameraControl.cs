@@ -139,8 +139,8 @@ namespace GrafikosEfektųProgramavimas
 		// and MonitorHeight.
 		//For this example I will take the dimensions 1440 to 900.
  
-		int MonitorWidth = 1440;
-		int MonitorHeight = 900;
+		int MonitorWidth = 1200;
+		int MonitorHeight = 600;
  
 		mousemoveX = mouse.Y - (MonitorHeight / 2);
 		mousemoveY = mouse.X - (MonitorWidth / 2);
