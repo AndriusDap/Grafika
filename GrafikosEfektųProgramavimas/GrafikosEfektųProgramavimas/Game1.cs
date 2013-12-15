@@ -171,7 +171,23 @@ namespace GrafikosEfektųProgramavimas
             {
                 speed *= 100f;
             }
-            CameraControl.Hover(cameraPosition, lookAt, (float) (gameTime.ElapsedGameTime.TotalMilliseconds * speed));
+
+            if (Mouse.GetState().RightButton == ButtonState.Pressed)
+            {
+                         
+                CameraControl.Hover(cameraPosition, lookAt, (float)(gameTime.ElapsedGameTime.TotalMilliseconds * speed));
+                if (this.IsMouseVisible == true)
+                {
+                    CameraControl.CameraResult = Vector3.Zero;
+                    CameraControl.LookAtResult = Vector3.Zero;
+                }   
+                this.IsMouseVisible = false;    
+            }
+            else
+            {
+                this.IsMouseVisible = true;
+            }
+            
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
                 var position = cameraPosition;
@@ -187,6 +203,8 @@ namespace GrafikosEfektųProgramavimas
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
             var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
+            CameraControl.CameraResult = Vector3.Zero;
+            CameraControl.LookAtResult = Vector3.Zero;
 
             //Render skybox first:
             //Invert culling
