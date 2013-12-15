@@ -95,11 +95,11 @@ namespace GrafikosEfektųProgramavimas
 
             cameraPosition = new Vector3(0f, 0f, 0f);
             lookAt = cameraPosition + Vector3.UnitX;
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.001f, 50000.0f);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.1f, 50000.0f);
             SunPosition = new Vector3(0, 0, 0);
 
             SunLookAt = Matrix.CreateLookAt(SunPosition, SunPosition + Vector3.UnitX, Vector3.Up);
-            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f,  0.001f, 5000.0f);
+            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f,  0.01f, 5000.0f);
             var pp = graphics.GraphicsDevice.PresentationParameters;
             var height = pp.BackBufferHeight;
             var width = pp.BackBufferWidth;
@@ -376,7 +376,9 @@ namespace GrafikosEfektųProgramavimas
 
             CameraControl.LookAtResult = Vector3.Zero;
             CameraControl.CameraResult = Vector3.Zero;
+
             GraphicsDevice.SetRenderTarget(RenderTarget);
+
             GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
             GraphicsDevice.Clear(Color.FromNonPremultiplied((int)(0.3 * 255), (int)(0.3 * 255), (int)(0.3 * 255), 255));
 
@@ -401,6 +403,7 @@ namespace GrafikosEfektųProgramavimas
                 GraphicsDevice.RasterizerState = normalCulling;
             }
             // Shadow pass:
+
             ShadowShader.Parameters["LightView"].SetValue(SunLookAt);
             ShadowShader.Parameters["LightProjection"].SetValue(SunProjection);
             ShadowShader.Parameters["ShadowTexture"].SetValue((Texture2D) ShadowRenderTarget);

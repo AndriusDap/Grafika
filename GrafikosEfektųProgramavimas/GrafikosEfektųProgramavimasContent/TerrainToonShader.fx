@@ -37,7 +37,7 @@ Texture NormalMap;
 sampler NormalMapSampler = sampler_state { texture = <NormalMap>; magFilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
 
 Texture CellMap;
-sampler2D ColorMapSampler = sampler_state {texture = <CellMap>; magFilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = clamp; AddressV = clamp;};
+sampler2D ColorMapSampler = sampler_state {texture = <CellMap>; magFilter = Point; minfilter = Point; mipfilter=Point; AddressU = clamp; AddressV = clamp;};
 struct VertexShaderInput
 {
         float4 Position : POSITION0;
