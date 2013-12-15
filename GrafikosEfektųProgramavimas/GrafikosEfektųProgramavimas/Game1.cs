@@ -20,22 +20,31 @@ namespace GrafikosEfektųProgramavimas
         Matrix world;
         List<RenderableObject> models;
         Dictionary<String, Texture2D> textures;
-        Dictionary<String, Texture2D> specularTextures;
-        Dictionary<String, Texture2D> lightMapTextures;
         Model skybox;
-        float aspectRatio;    
+        float aspectRatio;
+        Matrix World;
+        Vector3 SunPosition;
+        Matrix SunLookAt;
+        Matrix SunProjection;
         
         RasterizerState invertedCulling;
         RasterizerState normalCulling;
 
+        RenderTarget2D ShadowRenderTarget;
+        
+        RenderTarget2D[] RenderPasses;
+
+        Effect shadowShader;
+        Effect SumShader;
+        int ShadowMapSize = 1024;
         #region initialization
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferMultiSampling = true;
             graphics.IsFullScreen = false;
-            graphics.PreferredBackBufferHeight = 900;
-            graphics.PreferredBackBufferWidth = 1600;
+            graphics.PreferredBackBufferHeight = 800;
+            graphics.PreferredBackBufferWidth = 800;
             graphics.ApplyChanges();
             Content.RootDirectory = "Content";
             models = new List<RenderableObject>();
@@ -45,6 +54,9 @@ namespace GrafikosEfektųProgramavimas
             
             normalCulling = new RasterizerState();
             normalCulling.CullMode = CullMode.CullCounterClockwiseFace;
+            
+            RenderPasses = new RenderTarget2D[2];
+
         }
 
         public static String ParseMeshName(String name)
@@ -56,15 +68,33 @@ namespace GrafikosEfektųProgramavimas
         {
             base.Initialize();
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
-            cameraPosition = new Vector3(0, 0, 0);
-            lookAt = cameraPosition + Vector3.UnitX;
-            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.0001f, 100000.0f);
-            world = Matrix.CreateScale(1.0f/5000.0f);
-        }
 
+            cameraPosition = new Vector3(0f, 0f, 0f);
+            lookAt = cameraPosition + Vector3.UnitX;
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45.0f), aspectRatio, 0.001f, 5000.0f);
+            SunPosition = new Vector3(0, 0, 0);
+
+            SunLookAt = Matrix.CreateLookAt(SunPosition, SunPosition + Vector3.UnitX, Vector3.Up);
+            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f,  0.001f, 5000.0f);
+            var pp = graphics.GraphicsDevice.PresentationParameters;
+            var height = pp.BackBufferHeight;
+            var width = pp.BackBufferWidth;
+            ShadowRenderTarget = new RenderTarget2D(graphics.GraphicsDevice, ShadowMapSize, ShadowMapSize, false, SurfaceFormat.Single, DepthFormat.Depth24);
+            for (int i = 0; i < RenderPasses.Length; i++)
+            {
+                RenderPasses[i] = new RenderTarget2D(graphics.GraphicsDevice, width, height, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
+            }
+            World = Matrix.Identity * Matrix.CreateScale(0.00001f);
+           
+        }
+        Effect depthshader;
+        Effect Red;
         protected override void LoadContent()
         {
-           
+            SumShader = Content.Load<Effect>("SumShader");
+            shadowShader = Content.Load<Effect>("ShadowShader");
+            Red = Content.Load<Effect>("red");
+            depthshader = Content.Load<Effect>("DepthMapShader");
             var terrain = Content.Load<Model>("large_heightmap");
             models.Add(new RenderableObject(terrain));
             skybox = Content.Load<Model>("skybox2");
@@ -110,6 +140,36 @@ namespace GrafikosEfektųProgramavimas
                textures.Add(textureName, Content.Load<Texture2D>(textureName+"_DIFF"));
             }
 
+            Func<Effect, ModelMesh, Object> func = (effect, mesh) =>
+                    {
+                        effect.Parameters["DiffuseIntensity"].SetValue(0.50f);
+
+                        String parsedMeshName = ParseMeshName(mesh.Name);
+                        effect.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
+
+                        // Key light.
+                        effect.Parameters["Light0Direction"].SetValue(new Vector3(-0.5265408f, -0.5735765f, -0.6275069f));
+                        effect.Parameters["Light0DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+                        effect.Parameters["Light0SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+
+                        // Fill light.
+                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.7198464f, 0.3420201f, 0.6040227f));
+                        effect.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.9647059f, 0.7607844f, 0.4078432f));
+                        effect.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(Vector3.Zero);
+
+                        // Back light.
+                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.4545195f, -0.7660444f, 0.4545195f));
+                        effect.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+                        effect.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+
+                        // Ambient light.
+                        effect.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());//
+                        effect.Parameters["AmbientIntensity"].SetValue(0.30f);
+
+                        // Could not find out how to return nothing with lambda
+                        return null;
+                    };
+
             // Set up shaders for created models:
             foreach (var model in models)
             {
@@ -138,12 +198,34 @@ namespace GrafikosEfektųProgramavimas
                         // Ambient light.
                         effect.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());//
                         effect.Parameters["AmbientIntensity"].SetValue(0.30f);
-                  
+
+                        shadowShader.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
+
+                        // Key light.
+                        shadowShader.Parameters["Light0Direction"].SetValue(new Vector3(-0.5265408f, -0.5735765f, -0.6275069f));
+                        shadowShader.Parameters["Light0DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+                        shadowShader.Parameters["Light0SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
+
+                        // Fill light.
+                        shadowShader.Parameters["Light1Direction"].SetValue(new Vector3(0.7198464f, 0.3420201f, 0.6040227f));
+                        shadowShader.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.9647059f, 0.7607844f, 0.4078432f));
+                        shadowShader.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(Vector3.Zero);
+
+                        // Back light.
+                        shadowShader.Parameters["Light1Direction"].SetValue(new Vector3(0.4545195f, -0.7660444f, 0.4545195f));
+                        shadowShader.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+                        shadowShader.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
+
+                        // Ambient light.
+                        shadowShader.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());//
+                        shadowShader.Parameters["AmbientIntensity"].SetValue(0.30f);
+
+                        shadowShader.Parameters["DiffuseIntensity"].SetValue(0.50f);
+               
                         // Could not find out how to return nothing with lambda
                         return null;
                     });
             }
-
         }
 
 
@@ -199,37 +281,33 @@ namespace GrafikosEfektųProgramavimas
         #region rendering
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
+                        
+            // ShadowMap pass:
+            GraphicsDevice.SetRenderTarget(ShadowRenderTarget);
+            GraphicsDevice.Clear(Color.Black);
+            foreach (var model in models)
+
+            {
+                model.Render(depthshader, SunLookAt, SunProjection, World, SunPosition);
+            }
+
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
-            var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
-            CameraControl.CameraResult = Vector3.Zero;
-            CameraControl.LookAtResult = Vector3.Zero;
 
-            //Render skybox first:
-            //Invert culling
-            GraphicsDevice.RasterizerState = invertedCulling;
-            var skyBoxWorld = Matrix.CreateScale(10000.0f) * Matrix.CreateTranslation(cameraPosition);
-            foreach (ModelMesh mesh in skybox.Meshes)
-            {
-
-                foreach (BasicEffect effect in mesh.Effects)
-                {
-                   // effect.DisableDefaultLighting();
-                    effect.View = view;
-                    effect.Projection = projection;
-                    effect.World = skyBoxWorld;
-                }
-                mesh.Draw();
-            }
-            //restore culling
-            GraphicsDevice.RasterizerState = normalCulling;
-
+            GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+            // Shadow pass:
+            shadowShader.Parameters["LightView"].SetValue(SunLookAt);
+            shadowShader.Parameters["LightProjection"].SetValue(SunProjection);
+            shadowShader.Parameters["ShadowTexture"].SetValue((Texture2D) ShadowRenderTarget);
             foreach (var model in models)
             {
-                model.Render(view, projection, world, cameraPosition);
+                model.Render(shadowShader, view, projection, World, cameraPosition);
             }
             base.Draw(gameTime);
+            return;          
         }
         #endregion
     }
