@@ -13,6 +13,7 @@ namespace GrafikosEfektųProgramavimas
 {
     public class Game1 : Microsoft.Xna.Framework.Game
     {
+        #region parameters
         GraphicsDeviceManager graphics;
         Vector3 cameraPosition;
         Vector3 lookAt;
@@ -27,9 +28,6 @@ namespace GrafikosEfektųProgramavimas
         Matrix SunLookAt;
         Matrix SunProjection;
         
-        RasterizerState invertedCulling;
-        RasterizerState normalCulling;
-
         RenderTarget2D ShadowRenderTarget;
         
         RenderTarget2D[] RenderPasses;
@@ -37,15 +35,29 @@ namespace GrafikosEfektųProgramavimas
         Effect shadowShader;
         Effect SumShader;
         int ShadowMapSize = 1024;
+        Texture2D CellMap;
+        float SpecularToggle;
+        float NormalToggle;
+        float LightMapToggle;
+        float aspectRatio;
+        Effect SobelShader;
+        RasterizerState invertedCulling;
+        RasterizerState normalCulling;
+
+        RenderTarget2D RenderTarget;
+        Texture2D RenderBuffer;
+        #endregion
+
         #region initialization
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferMultiSampling = true;
             graphics.IsFullScreen = false;
-            graphics.PreferredBackBufferHeight = 800;
-            graphics.PreferredBackBufferWidth = 800;
+            graphics.PreferredBackBufferHeight = 600;
+            graphics.PreferredBackBufferWidth = 1200;
             graphics.ApplyChanges();
+
             Content.RootDirectory = "Content";
             models = new List<RenderableObject>();
             textures = new Dictionary<String, Texture2D>();                  
@@ -54,6 +66,7 @@ namespace GrafikosEfektųProgramavimas
             
             normalCulling = new RasterizerState();
             normalCulling.CullMode = CullMode.CullCounterClockwiseFace;
+
             
             RenderPasses = new RenderTarget2D[2];
 
@@ -97,6 +110,16 @@ namespace GrafikosEfektųProgramavimas
             depthshader = Content.Load<Effect>("DepthMapShader");
             var terrain = Content.Load<Model>("large_heightmap");
             models.Add(new RenderableObject(terrain));
+        }
+
+        #endregion
+
+        #region content loading
+        protected override void LoadContent()
+        {
+            var terrain = Content.Load<Model>("large_heightmap");
+            models.Add(new RenderableObject(terrain));
+
             skybox = Content.Load<Model>("skybox2");
 
             var cube = Content.Load<Model>("cube2");
@@ -139,36 +162,6 @@ namespace GrafikosEfektųProgramavimas
             {
                textures.Add(textureName, Content.Load<Texture2D>(textureName+"_DIFF"));
             }
-
-            Func<Effect, ModelMesh, Object> func = (effect, mesh) =>
-                    {
-                        effect.Parameters["DiffuseIntensity"].SetValue(0.50f);
-
-                        String parsedMeshName = ParseMeshName(mesh.Name);
-                        effect.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
-
-                        // Key light.
-                        effect.Parameters["Light0Direction"].SetValue(new Vector3(-0.5265408f, -0.5735765f, -0.6275069f));
-                        effect.Parameters["Light0DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
-                        effect.Parameters["Light0SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(1, 0.9607844f, 0.8078432f));
-
-                        // Fill light.
-                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.7198464f, 0.3420201f, 0.6040227f));
-                        effect.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.9647059f, 0.7607844f, 0.4078432f));
-                        effect.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(Vector3.Zero);
-
-                        // Back light.
-                        effect.Parameters["Light1Direction"].SetValue(new Vector3(0.4545195f, -0.7660444f, 0.4545195f));
-                        effect.Parameters["Light1DiffuseColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
-                        effect.Parameters["Light1SpecularColor"].SetValue(Color.White.ToVector3());//SetValue(new Vector3(0.3231373f, 0.3607844f, 0.3937255f));
-
-                        // Ambient light.
-                        effect.Parameters["AmbientLightColor"].SetValue(Color.White.ToVector3());//
-                        effect.Parameters["AmbientIntensity"].SetValue(0.30f);
-
-                        // Could not find out how to return nothing with lambda
-                        return null;
-                    };
 
             // Set up shaders for created models:
             foreach (var model in models)
@@ -226,6 +219,18 @@ namespace GrafikosEfektųProgramavimas
                         return null;
                     });
             }
+           CellMap = Content.Load<Texture2D>("celMap");
+           PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
+           RenderTarget = new RenderTarget2D(graphics.GraphicsDevice, pp.BackBufferWidth, pp.BackBufferHeight, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
+
+           float width = 1.0f / (float)pp.BackBufferWidth;
+           float height = 1.0f / (float)pp.BackBufferHeight;
+           SobelShader = Content.Load<Effect>("SobelShader");
+           var pixelOffsetX = new Vector3(-width, 0, width);
+           var pixelOffsetY = new Vector3(-height, 0, height);
+
+           SobelShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
+           SobelShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
         }
 
 
@@ -244,7 +249,9 @@ namespace GrafikosEfektųProgramavimas
                 this.Exit();
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 this.Exit();
+
             float speed = 0.00001f;
+
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
             {
                 speed *= 10f;
@@ -279,6 +286,7 @@ namespace GrafikosEfektųProgramavimas
         #endregion
 
         #region rendering
+
         protected override void Draw(GameTime gameTime)
         {
             var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
@@ -291,9 +299,9 @@ namespace GrafikosEfektųProgramavimas
             {
                 model.Render(depthshader, SunLookAt, SunProjection, World, SunPosition);
             }
-
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
+
 
             GraphicsDevice.SetRenderTarget(null);
             GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
@@ -305,6 +313,16 @@ namespace GrafikosEfektųProgramavimas
             foreach (var model in models)
             {
                 model.Render(shadowShader, view, projection, World, cameraPosition);
+            }
+            GraphicsDevice.SetRenderTarget(null);
+            RenderBuffer = (Texture2D)RenderTarget;
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.DarkSlateBlue, 1.0f, 0);
+            
+            using (SpriteBatch sprite = new SpriteBatch(GraphicsDevice))
+            {
+                sprite.Begin(0, BlendState.Opaque, null, null, null, SobelShader);
+                sprite.Draw(RenderBuffer, new Vector2(0, 0), Color.White);
+                sprite.End();
             }
             base.Draw(gameTime);
             return;          

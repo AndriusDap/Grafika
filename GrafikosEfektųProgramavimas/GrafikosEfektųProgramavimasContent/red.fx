@@ -29,6 +29,8 @@ sampler DiffuseTextureSampler = sampler_state {  texture = <DiffuseTexture> ; ma
 Texture NormalMap;
 sampler NormalMapSampler = sampler_state { texture = <NormalMap>; magFilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
 
+Texture CellMap;
+sampler2D ColorMapSampler = sampler_state {texture = <CellMap>; magFilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; };
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
@@ -55,7 +57,6 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input, float3 Normal :
 	output.Position = mul(output.Position, Projection);
 	output.Normal = normalize(mul(Normal, World));
 	output.TexCoords = TexCoords;
-
 	return output;
 }
 
@@ -63,12 +64,13 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
 	float4 ambientSum = float4(AmbientLightColor * AmbientIntensity, 0.0);
 	float4 diffuseSum = (0.0, 0.0, 0.0, 0.0);
-	
+	float4 cellSum = (0.0, 0.0, 0.0, 0.0);
 	float3 DiffuseColor = tex2D(DiffuseTextureSampler, input.TexCoords);	
 	ambientSum = ambientSum * float4(DiffuseColor, 1);
 
 	float4 normal = float4(input.Normal, 1);
 	
+<<<<<<< HEAD:GrafikosEfektųProgramavimas/GrafikosEfektųProgramavimasContent/red.fx
 	float4 diffuse = saturate(dot(-Light0Direction, normal));
 	diffuseSum = diffuseSum + float4(Light0DiffuseColor, 1) * diffuse * DiffuseIntensity;
 			
@@ -79,6 +81,15 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	diffuseSum = diffuseSum + float4(Light2DiffuseColor, 1) * diffuse * DiffuseIntensity;
 	
 	return float4(1.0, 0.0, 0.0, 0.0);
+=======
+	float diffuse = saturate(dot(-Light0Direction, normal));
+	float2 intensityCoordinate = float2(diffuse, 0);
+	float4 intensity = tex2D(ColorMapSampler, intensityCoordinate);
+	diffuseSum = diffuseSum + float4(Light0DiffuseColor, 1) * diffuse * DiffuseIntensity;
+	cellSum = diffuseSum + float4(Light0DiffuseColor, 1) * intensity * DiffuseIntensity;
+	cellSum[3] = 1;
+	return ambientSum + cellSum;
+>>>>>>> origin/Toon-shader:GrafikosEfektųProgramavimas/GrafikosEfektųProgramavimasContent/TerrainToonShader.fx
 }
 
 technique TerrainShader
