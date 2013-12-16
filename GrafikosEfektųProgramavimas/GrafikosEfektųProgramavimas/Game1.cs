@@ -57,6 +57,8 @@ namespace GrafikosEfektųProgramavimas
         // Aditional effects
         bool SkyboxEnabled = true;
         bool FogEnabled = true;
+
+        BasicParticleSystem Particles;
         #endregion
 
         #region initialization
@@ -99,7 +101,7 @@ namespace GrafikosEfektųProgramavimas
             SunPosition = new Vector3(0, 0, 0);
 
             SunLookAt = Matrix.CreateLookAt(SunPosition, SunPosition + Vector3.UnitX, Vector3.Up);
-            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f,  0.01f, 5000.0f);
+            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f,  0.01f, 50000.0f);
             var pp = graphics.GraphicsDevice.PresentationParameters;
             var height = pp.BackBufferHeight;
             var width = pp.BackBufferWidth;
@@ -109,7 +111,7 @@ namespace GrafikosEfektųProgramavimas
                 RenderPasses[i] = new RenderTarget2D(graphics.GraphicsDevice, width, height, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
             }
             World = Matrix.Identity * Matrix.CreateScale(0.00001f);
-           
+                
         }
 
 
@@ -233,14 +235,17 @@ namespace GrafikosEfektųProgramavimas
 
            ScharrShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
            ScharrShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
+           Particles = new BasicParticleSystem(cube);
         }
 
 
 
         protected override void UnloadContent()
         {
+            // Or don't
         }
         #endregion
+
         KeyboardState oldKeyboardState = Keyboard.GetState();
         private bool IsKeyPressed(Keys k)
         {
@@ -351,7 +356,13 @@ namespace GrafikosEfektųProgramavimas
                 SkyboxEnabled = !SkyboxEnabled;
             }
 
+            if (IsKeyPressed(Keys.Space))
+            {
+                Particles.SpawnParticles(cameraPosition, lookAt, 1f, 100, gameTime);
+            }
+
             oldKeyboardState = Keyboard.GetState();
+            Particles.Update(gameTime);
             base.Update(gameTime);
         }
         #endregion
@@ -361,8 +372,7 @@ namespace GrafikosEfektųProgramavimas
         protected override void Draw(GameTime gameTime)
         {
             var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
-                        
-
+    
             // ShadowMap pass:
             GraphicsDevice.SetRenderTarget(ShadowRenderTarget);
             GraphicsDevice.Clear(Color.Black);
@@ -402,8 +412,9 @@ namespace GrafikosEfektųProgramavimas
                 //restore culling
                 GraphicsDevice.RasterizerState = normalCulling;
             }
-            // Shadow pass:
 
+            Particles.Render(graphics.GraphicsDevice, World, view, projection, cameraPosition);
+            // Shadow pass:
             ShadowShader.Parameters["LightView"].SetValue(SunLookAt);
             ShadowShader.Parameters["LightProjection"].SetValue(SunProjection);
             ShadowShader.Parameters["ShadowTexture"].SetValue((Texture2D) ShadowRenderTarget);
