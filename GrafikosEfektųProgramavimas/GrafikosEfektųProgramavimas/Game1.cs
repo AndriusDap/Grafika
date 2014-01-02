@@ -59,6 +59,8 @@ namespace GrafikosEfektųProgramavimas
         bool FogEnabled = true;
 
         BasicParticleSystem Particles;
+
+        ButtonMaster Buttons;
         #endregion
 
         #region initialization
@@ -67,8 +69,8 @@ namespace GrafikosEfektųProgramavimas
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferMultiSampling = true;
             graphics.IsFullScreen = false;
-            graphics.PreferredBackBufferHeight = 600;
-            graphics.PreferredBackBufferWidth = 1200;
+            graphics.PreferredBackBufferHeight = 900;
+            graphics.PreferredBackBufferWidth = 1600;
             graphics.ApplyChanges();
 
             Content.RootDirectory = "Content";
@@ -82,7 +84,7 @@ namespace GrafikosEfektųProgramavimas
 
             
             RenderPasses = new RenderTarget2D[2];
-
+            Buttons = new ButtonMaster();
         }
 
         public static String ParseMeshName(String name)
@@ -111,7 +113,78 @@ namespace GrafikosEfektųProgramavimas
                 RenderPasses[i] = new RenderTarget2D(graphics.GraphicsDevice, width, height, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
             }
             World = Matrix.Identity * Matrix.CreateScale(0.00001f);
-                
+
+            Buttons.AddButton("Sobel Shader", () =>
+            {
+                if (ActivePostEffect == SobelShader)
+                {
+                    ActivePostEffect = null;
+                }
+                else
+                {
+                    ActivePostEffect = SobelShader;
+                }
+                return "Sobel Shader";
+            });
+
+
+            Buttons.AddButton("Modified Sobel", () =>
+            {
+                if (ActivePostEffect == ScharrShader)
+                {
+                    ActivePostEffect = null;
+                }
+                else
+                {
+                    ActivePostEffect = ScharrShader;
+                }
+                return "Modified Sobel";
+            });
+
+            Buttons.AddButton("Cell shading", () =>
+            {
+                if (ActiveMainShader == ToonShader && !BasicShaderEnabled)
+                {
+                    ActiveMainShader.Parameters["IsThisToon"].SetValue(0f);
+                    BasicShaderEnabled = true;
+                }
+                else
+                {
+                    BasicShaderEnabled = false;
+                    ActiveMainShader = ToonShader;
+                    ActiveMainShader.Parameters["IsThisToon"].SetValue(1f);
+                }
+                return "Cell shading";
+            });
+
+            Buttons.AddButton("Shadow Map", () =>
+            {
+                if (ActiveMainShader == ShadowShader)
+                {
+                    ActiveMainShader = ToonShader;
+                    ActiveMainShader.Parameters["IsThisToon"].SetValue(0f);
+                }
+                else
+                {
+                    ActiveMainShader = ShadowShader;
+                }
+                return "Shadow Shader";
+            });
+
+            Buttons.AddButton("Fog", () =>
+            {
+                FogEnabled = !FogEnabled;
+                ShadowShader.Parameters["FogEnabled"].SetValue(FogEnabled ? 1f : 0f);
+                ToonShader.Parameters["FogEnabled"].SetValue(FogEnabled ? 1f : 0f);
+                return "Fog";
+            });
+
+
+            Buttons.AddButton("Skybox", () =>
+            {
+                SkyboxEnabled = !SkyboxEnabled;
+                return "Skybox";
+            });
         }
 
 
@@ -145,6 +218,7 @@ namespace GrafikosEfektųProgramavimas
         
         protected override void LoadContent()
         {
+            Buttons.LoadContent(graphics.GraphicsDevice, Content);
             SumShader = Content.Load<Effect>("SumShader");
             
             depthshader = Content.Load<Effect>("DepthMapShader");
@@ -290,78 +364,9 @@ namespace GrafikosEfektųProgramavimas
                 var position = cameraPosition;
             }
 
-
-            
-            if (IsKeyPressed(Keys.NumPad1))
-            {
-                if (ActivePostEffect == SobelShader)
-                {
-                    ActivePostEffect = null;
-                }
-                else
-                {
-                    ActivePostEffect = SobelShader;
-                }
-            }
-            if (IsKeyPressed(Keys.NumPad2))
-            {
-                if (ActivePostEffect == ScharrShader)
-                {
-                    ActivePostEffect = null;
-                }
-                else
-                {
-                    ActivePostEffect = ScharrShader;
-                }
-            }
-
-            if(IsKeyPressed(Keys.NumPad3))
-            {
-                if (ActiveMainShader == ToonShader && !BasicShaderEnabled)
-                {
-                    ActiveMainShader.Parameters["IsThisToon"].SetValue(0f);
-                    BasicShaderEnabled = true;
-                }
-                else
-                {
-                    BasicShaderEnabled = false;
-                    ActiveMainShader = ToonShader;
-                    ActiveMainShader.Parameters["IsThisToon"].SetValue(1f);
-                }
-            }
-
-            if(IsKeyPressed(Keys.NumPad4))
-            {
-                if (ActiveMainShader == ShadowShader)
-                {
-                    ActiveMainShader = ToonShader;
-                    ActiveMainShader.Parameters["IsThisToon"].SetValue(0f);
-                }
-                else
-                {
-                    ActiveMainShader = ShadowShader;
-                }
-            }
-
-            if (IsKeyPressed(Keys.NumPad7))
-            {
-                FogEnabled = !FogEnabled;
-                ShadowShader.Parameters["FogEnabled"].SetValue(FogEnabled? 1f : 0f);
-                ToonShader.Parameters["FogEnabled"].SetValue(FogEnabled ? 1f : 0f);
-            }
-
-
-            if (IsKeyPressed(Keys.NumPad9))
-            {
-                SkyboxEnabled = !SkyboxEnabled;
-            }
-
-            if (IsKeyPressed(Keys.Space))
-            {
-                Particles.SpawnParticles(cameraPosition, lookAt, 1f, 100, gameTime);
-            }
-
             oldKeyboardState = Keyboard.GetState();
+
+            Buttons.Update();
             Particles.Update(gameTime);
             base.Update(gameTime);
         }
@@ -372,10 +377,12 @@ namespace GrafikosEfektųProgramavimas
         protected override void Draw(GameTime gameTime)
         {
             var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
-    
+
+            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.BlendState = BlendState.Opaque;
             // ShadowMap pass:
             GraphicsDevice.SetRenderTarget(ShadowRenderTarget);
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
             foreach (var model in models)
             {
                 model.Render(depthshader, SunLookAt, SunProjection, World, SunPosition);
@@ -426,14 +433,17 @@ namespace GrafikosEfektųProgramavimas
        
             GraphicsDevice.SetRenderTarget(null);
             RenderBuffer = (Texture2D)RenderTarget;
-            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.DarkSlateBlue, 1.0f, 0);
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
             
             using (SpriteBatch sprite = new SpriteBatch(GraphicsDevice))
             {
-                sprite.Begin(0, BlendState.Opaque, null, null, null, ActivePostEffect);
+                sprite.Begin(0, BlendState.AlphaBlend, null, null, null, ActivePostEffect);
                 sprite.Draw(RenderBuffer, new Vector2(0, 0), Color.White);
+
+                Buttons.Render(sprite);
                 sprite.End();
             }
+
             base.Draw(gameTime);
             return;          
         }

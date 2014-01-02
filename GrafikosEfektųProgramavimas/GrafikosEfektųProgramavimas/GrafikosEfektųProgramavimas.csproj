@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicParticleSystem.cs" />
+    <Compile Include="ButtonMaster.cs" />
     <Compile Include="CameraControl.cs" />
     <Compile Include="ParticleSystem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
