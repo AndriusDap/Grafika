@@ -7,11 +7,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace GrafikosEfektųProgramavimas
 {
-    class RenderableObject
+    class RenderableObject : IRenderable
     {
         private Matrix ModelMatrix;
-        public Model ObjectModel;
-        
+        public Model ObjectModel { get; set; }
+
+
         private Vector3 position;
         private float scale;
         private Boolean dirty;
@@ -51,7 +52,8 @@ namespace GrafikosEfektųProgramavimas
             dirty = true;
         }
 
-        public RenderableObject(Model model) : this()
+        public RenderableObject(Model model)
+            : this()
         {
             ObjectModel = model;
         }
@@ -78,7 +80,7 @@ namespace GrafikosEfektųProgramavimas
                 {
 
                     effect.Parameters["World"].SetValue(world);
-                    effect.Parameters["Model"].SetValue(ModelMatrix);                    
+                    effect.Parameters["Model"].SetValue(ModelMatrix);
                     effect.Parameters["View"].SetValue(View);
                     effect.Parameters["Projection"].SetValue(Projection);
                     effect.Parameters["CameraPosition"].SetValue(CameraPosition);
@@ -109,7 +111,7 @@ namespace GrafikosEfektųProgramavimas
             }
         }
 
-        public void SetUpEffects(Func<Effect, ModelMesh, Object> SetUpFunction)
+        public void SetUpEffects(Action<Effect, ModelMesh> SetUpFunction)
         {
             foreach (ModelMesh mesh in ObjectModel.Meshes)
             {

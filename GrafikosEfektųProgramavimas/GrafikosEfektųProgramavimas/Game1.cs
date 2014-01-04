@@ -19,7 +19,7 @@ namespace GrafikosEfektųProgramavimas
         Vector3 lookAt;
         Matrix projection;
 
-        List<RenderableObject> models;
+        List<IRenderable> models;
         Dictionary<String, Texture2D> textures;
         Model skybox;
         float aspectRatio;
@@ -58,9 +58,8 @@ namespace GrafikosEfektųProgramavimas
         bool SkyboxEnabled = true;
         bool FogEnabled = true;
 
-        BasicParticleSystem Particles;
-
         ButtonMaster Buttons;
+        Model cube;
         #endregion
 
         #region initialization
@@ -74,7 +73,7 @@ namespace GrafikosEfektųProgramavimas
             graphics.ApplyChanges();
 
             Content.RootDirectory = "Content";
-            models = new List<RenderableObject>();
+            models = new List<IRenderable>();
             textures = new Dictionary<String, Texture2D>();                  
             invertedCulling = new RasterizerState();
             invertedCulling.CullMode = CullMode.CullClockwiseFace;
@@ -185,6 +184,21 @@ namespace GrafikosEfektųProgramavimas
                 SkyboxEnabled = !SkyboxEnabled;
                 return "Skybox";
             });
+
+            Buttons.AddButton("Spawn cube", () =>
+                {
+                    RenderableObject o = new RenderableObject(cube);
+                    o.Position = cameraPosition + 10 * Vector3.Normalize(lookAt - cameraPosition);
+                    models.Add(o);
+                    return "Spawn cube";
+                });
+            Buttons.AddButton("Cube spawner", () =>
+                {
+                    BasicParticleSystem ps = new BasicParticleSystem(cube);
+                    ps.Position = cameraPosition + 500 * Vector3.Normalize(lookAt - cameraPosition);
+                    models.Add(ps);
+                    return "Cube spawner";
+                });
         }
 
 
@@ -228,7 +242,7 @@ namespace GrafikosEfektųProgramavimas
 
             skybox = Content.Load<Model>("skybox2");
 
-            var cube = Content.Load<Model>("cube2");
+            cube = Content.Load<Model>("cube2");
             var renderable = new RenderableObject(cube);
             renderable.Position = new Vector3(-210, -50, -510);
             models.Add(renderable);
@@ -278,7 +292,6 @@ namespace GrafikosEfektųProgramavimas
                     String parsedMeshName = ParseMeshName(mesh.Name);
                     effect.Parameters["DiffuseTexture"].SetValue(textures[parsedMeshName]);
                     SetUpShader(effect);
-                    return null;
                 });
             }
 
@@ -309,7 +322,6 @@ namespace GrafikosEfektųProgramavimas
 
            ScharrShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
            ScharrShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
-           Particles = new BasicParticleSystem(cube);
         }
 
 
@@ -365,9 +377,8 @@ namespace GrafikosEfektųProgramavimas
             }
 
             oldKeyboardState = Keyboard.GetState();
-
+            models.ForEach(m => m.Update(gameTime));
             Buttons.Update();
-            Particles.Update(gameTime);
             base.Update(gameTime);
         }
         #endregion
@@ -376,6 +387,11 @@ namespace GrafikosEfektųProgramavimas
 
         protected override void Draw(GameTime gameTime)
         {
+            
+            cameraPosition += CameraControl.CameraResult;
+            lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
+            CameraControl.LookAtResult = Vector3.Zero;
+            CameraControl.CameraResult = Vector3.Zero;
             var view = Matrix.CreateLookAt(cameraPosition, lookAt, Vector3.Up);
 
             GraphicsDevice.Clear(Color.Black);
@@ -387,12 +403,7 @@ namespace GrafikosEfektųProgramavimas
             {
                 model.Render(depthshader, SunLookAt, SunProjection, World, SunPosition);
             }
-           
-            cameraPosition += CameraControl.CameraResult;
-            lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
 
-            CameraControl.LookAtResult = Vector3.Zero;
-            CameraControl.CameraResult = Vector3.Zero;
 
             GraphicsDevice.SetRenderTarget(RenderTarget);
 
@@ -420,7 +431,6 @@ namespace GrafikosEfektųProgramavimas
                 GraphicsDevice.RasterizerState = normalCulling;
             }
 
-            Particles.Render(graphics.GraphicsDevice, World, view, projection, cameraPosition);
             // Shadow pass:
             ShadowShader.Parameters["LightView"].SetValue(SunLookAt);
             ShadowShader.Parameters["LightProjection"].SetValue(SunProjection);

@@ -8,85 +8,91 @@ using Microsoft.Xna.Framework.Content;
 
 namespace GrafikosEfektųProgramavimas
 {
-    class BasicParticleSystem
+    class BasicParticleSystem : IRenderable
     {
-        struct Particle
+        static private Random rng = new Random();
+        static private float AgeLimit = 2000;
+        class Particle
         {
             public bool Alive;
             public RenderableObject obj;
-            public Vector3 Target;
-            public Vector3 Source;
-            public Double Date;
+            public Vector3 Position;
+            public Vector3 Speed;
+
+            public Particle(Model m)
+            {
+                Alive = true;
+                var RandomVector = new Vector3(
+                    (float)(rng.NextDouble() - 0.5),
+                    (float)(rng.NextDouble() - 0.5),
+                    (float)(rng.NextDouble() - 0.5));
+                Speed = Vector3.Normalize(RandomVector) / 5;
+                Position = new Vector3(0, 0, 0);
+                obj = new RenderableObject(m);
+            }
+
+            public void Update(GameTime time)
+            {
+                Position += Speed * (float)time.ElapsedGameTime.TotalMilliseconds;
+            }
         }
-        Particle[] particles;
 
-        int first;
-        int last;
+        List<Particle> particles;
+
         private static int MaxParticles = 500;
+        private float age;
 
-        Model model;
-        Effect effect;
-
-        private Random rng;
+        public Model ObjectModel { get; set; }
+        public Vector3 Position { get; set; }
 
         public BasicParticleSystem(Model m)
         {
-            model = m;
-            particles = new Particle[MaxParticles];
+            ObjectModel = m;
+            particles = new List<Particle>(MaxParticles);
             for (int i = 0; i < MaxParticles; i++)
             {
-                particles[i] = new Particle();
-                particles[i].Alive = false;
-            }
-            first = 0;
-            last = 0;
-            rng = new Random();
-        }
-
-        public void SpawnParticles(Vector3 startingPoint, Vector3 targetPoint, float spread, int count, GameTime time)
-        {
-            double startingTime = time.TotalGameTime.TotalMilliseconds;
-            for (int i = 0; i < count; i++)
-            {
-                Particle current = new Particle();
-                current.Alive = true;
-                current.obj = new RenderableObject(model);
-                current.obj.Scale = 1f;
-                current.Date = startingTime;
-                current.Source = startingPoint;
-                current.Target = targetPoint + new Vector3((float)rng.NextDouble() * 2, (float)rng.NextDouble() * 2, (float)rng.NextDouble() * 2);
-                particles[i % MaxParticles] = current;
+                particles.Add(new Particle(ObjectModel));
             }
         }
 
         public void Update(GameTime time)
         {
-            double now = time.TotalGameTime.TotalMilliseconds;
-            double minDate = time.TotalGameTime.TotalMilliseconds - 5000;
-            for (int i = 0; i < MaxParticles; i++)
+            if (age < AgeLimit)
             {
-                if (particles[i].Alive)
-                {
-                    if (particles[i].Date < minDate)
-                    {
-                        particles[i].Alive = false;
-                    }
-                    else
-                    {
-                        particles[i].obj.Position = particles[i].Source;// +(particles[i].Target - particles[i].Source) * (float)(now - particles[i].Date) / 1000f; 
-                    }
-                }
+                age += (float)time.ElapsedGameTime.TotalMilliseconds;
+                particles.ForEach(p => p.Update(time));
             }
         }
 
-        public void Render(GraphicsDevice device, Matrix World, Matrix View, Matrix Projection, Vector3 CameraPosition)
+        public void Render(Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
-            for (int i = 0; i < MaxParticles; i++)
+            if (age < AgeLimit)
             {
-                if (particles[i].Alive)
-                {
-                    particles[i].obj.Render(View, Projection, World, CameraPosition);
-                }
+                particles.ForEach(p =>
+                    {
+                        p.obj.Position = p.Position + Position;
+                        p.obj.Render(View, Projection, world, CameraPosition);
+                    });
+            }
+        }
+
+        public void Render(Effect customShader, Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
+        {
+            if (age < AgeLimit)
+            {
+                particles.ForEach(p =>
+                    {
+                        p.obj.Position = p.Position + Position;
+                        p.obj.Render(customShader, View, Projection, world, CameraPosition);
+                    });
+            }
+        }
+
+        public void SetUpEffects(Action<Effect, ModelMesh> SetUpFunction)
+        {
+            if (age < AgeLimit)
+            {
+                particles.ForEach(p => p.obj.SetUpEffects(SetUpFunction));
             }
         }
     }
