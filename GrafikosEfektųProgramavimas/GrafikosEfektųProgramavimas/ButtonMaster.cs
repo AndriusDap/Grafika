@@ -14,9 +14,9 @@ namespace GrafikosEfektųProgramavimas
         class Button
         {
             public String Title;
-            public Func<String> Function;
+            public Action Function;
 
-            public Button(String Title, Func<String> Function)
+            public Button(String Title, Action Function)
             {
                 this.Title = Title;
                 this.Function = Function;
@@ -26,7 +26,7 @@ namespace GrafikosEfektųProgramavimas
             {
                 if (Function != null)
                 {
-                    SetTitle(Function());
+                    Function();
                 }
             }
 
@@ -68,7 +68,7 @@ namespace GrafikosEfektųProgramavimas
             BoundingBottomRight = new Vector2(Gap + Width, Gap);
         }
 
-        public void AddButton(String Title, Func<String> ButtonFunction)
+        public void AddButton(String Title, Action ButtonFunction)
         {
             Buttons.Add(new Button(Title, ButtonFunction));
             

@@ -34,6 +34,7 @@ namespace GrafikosEfektųProgramavimas
             public void Update(GameTime time)
             {
                 Position += Speed * (float)time.ElapsedGameTime.TotalMilliseconds;
+              //  Speed *= 0.99f;
             }
         }
 

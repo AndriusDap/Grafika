@@ -27,9 +27,9 @@ namespace GrafikosEfektųProgramavimas
         Vector3 SunPosition;
         Matrix SunLookAt;
         Matrix SunProjection;
-        
+
         RenderTarget2D ShadowRenderTarget;
-        
+
         RenderTarget2D[] RenderPasses;
 
         Effect SumShader;
@@ -74,14 +74,14 @@ namespace GrafikosEfektųProgramavimas
 
             Content.RootDirectory = "Content";
             models = new List<IRenderable>();
-            textures = new Dictionary<String, Texture2D>();                  
+            textures = new Dictionary<String, Texture2D>();
             invertedCulling = new RasterizerState();
             invertedCulling.CullMode = CullMode.CullClockwiseFace;
-            
+
             normalCulling = new RasterizerState();
             normalCulling.CullMode = CullMode.CullCounterClockwiseFace;
 
-            
+
             RenderPasses = new RenderTarget2D[2];
             Buttons = new ButtonMaster();
         }
@@ -90,7 +90,7 @@ namespace GrafikosEfektųProgramavimas
         {
             return name.Split('_')[0];
         }
-       
+
         protected override void Initialize()
         {
             base.Initialize();
@@ -102,7 +102,7 @@ namespace GrafikosEfektųProgramavimas
             SunPosition = new Vector3(0, 0, 0);
 
             SunLookAt = Matrix.CreateLookAt(SunPosition, SunPosition + Vector3.UnitX, Vector3.Up);
-            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f,  0.01f, 50000.0f);
+            SunProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90.0f), 1.0f, 0.01f, 50000.0f);
             var pp = graphics.GraphicsDevice.PresentationParameters;
             var height = pp.BackBufferHeight;
             var width = pp.BackBufferWidth;
@@ -123,7 +123,6 @@ namespace GrafikosEfektųProgramavimas
                 {
                     ActivePostEffect = SobelShader;
                 }
-                return "Sobel Shader";
             });
 
 
@@ -137,7 +136,6 @@ namespace GrafikosEfektųProgramavimas
                 {
                     ActivePostEffect = ScharrShader;
                 }
-                return "Modified Sobel";
             });
 
             Buttons.AddButton("Cell shading", () =>
@@ -153,7 +151,6 @@ namespace GrafikosEfektųProgramavimas
                     ActiveMainShader = ToonShader;
                     ActiveMainShader.Parameters["IsThisToon"].SetValue(1f);
                 }
-                return "Cell shading";
             });
 
             Buttons.AddButton("Shadow Map", () =>
@@ -167,7 +164,6 @@ namespace GrafikosEfektųProgramavimas
                 {
                     ActiveMainShader = ShadowShader;
                 }
-                return "Shadow Shader";
             });
 
             Buttons.AddButton("Fog", () =>
@@ -175,14 +171,12 @@ namespace GrafikosEfektųProgramavimas
                 FogEnabled = !FogEnabled;
                 ShadowShader.Parameters["FogEnabled"].SetValue(FogEnabled ? 1f : 0f);
                 ToonShader.Parameters["FogEnabled"].SetValue(FogEnabled ? 1f : 0f);
-                return "Fog";
             });
 
 
             Buttons.AddButton("Skybox", () =>
             {
                 SkyboxEnabled = !SkyboxEnabled;
-                return "Skybox";
             });
 
             Buttons.AddButton("Spawn cube", () =>
@@ -190,14 +184,12 @@ namespace GrafikosEfektųProgramavimas
                     RenderableObject o = new RenderableObject(cube);
                     o.Position = cameraPosition + 10 * Vector3.Normalize(lookAt - cameraPosition);
                     models.Add(o);
-                    return "Spawn cube";
                 });
-            Buttons.AddButton("Cube spawner", () =>
+            Buttons.AddButton("Particles", () =>
                 {
                     BasicParticleSystem ps = new BasicParticleSystem(cube);
                     ps.Position = cameraPosition + 500 * Vector3.Normalize(lookAt - cameraPosition);
                     models.Add(ps);
-                    return "Cube spawner";
                 });
         }
 
@@ -229,12 +221,12 @@ namespace GrafikosEfektųProgramavimas
 
             e.Parameters["DiffuseIntensity"].SetValue(0.50f);
         }
-        
+
         protected override void LoadContent()
         {
             Buttons.LoadContent(graphics.GraphicsDevice, Content);
             SumShader = Content.Load<Effect>("SumShader");
-            
+
             depthshader = Content.Load<Effect>("DepthMapShader");
 
             var terrain = Content.Load<Model>("large_heightmap");
@@ -250,11 +242,11 @@ namespace GrafikosEfektųProgramavimas
             renderable = new RenderableObject(cube);
             renderable.Position = new Vector3(-210, -56, -510);
             models.Add(renderable);
-            
+
             renderable = new RenderableObject(cube);
             renderable.Position = new Vector3(-220, -56, -510);
             models.Add(renderable);
-            
+
             renderable = new RenderableObject(cube);
             renderable.Position = new Vector3(-210, -56, -520);
             models.Add(renderable);
@@ -280,7 +272,7 @@ namespace GrafikosEfektųProgramavimas
 
             foreach (var textureName in textureNames)
             {
-               textures.Add(textureName, Content.Load<Texture2D>(textureName+"_DIFF"));
+                textures.Add(textureName, Content.Load<Texture2D>(textureName + "_DIFF"));
             }
             // Set up shaders for created models:
             foreach (var model in models)
@@ -307,21 +299,21 @@ namespace GrafikosEfektųProgramavimas
             ActiveMainShader = ToonShader;
 
 
-           PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
-           RenderTarget = new RenderTarget2D(graphics.GraphicsDevice, pp.BackBufferWidth, pp.BackBufferHeight, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
+            PresentationParameters pp = graphics.GraphicsDevice.PresentationParameters;
+            RenderTarget = new RenderTarget2D(graphics.GraphicsDevice, pp.BackBufferWidth, pp.BackBufferHeight, false, graphics.GraphicsDevice.DisplayMode.Format, DepthFormat.Depth24);
 
-           float width = 1.0f / (float)pp.BackBufferWidth;
-           float height = 1.0f / (float)pp.BackBufferHeight;
-           SobelShader = Content.Load<Effect>("SobelShader");
-           ScharrShader = Content.Load<Effect>("ScharrShader");
-           var pixelOffsetX = new Vector3(-width, 0, width);
-           var pixelOffsetY = new Vector3(-height, 0, height);
+            float width = 1.0f / (float)pp.BackBufferWidth;
+            float height = 1.0f / (float)pp.BackBufferHeight;
+            SobelShader = Content.Load<Effect>("SobelShader");
+            ScharrShader = Content.Load<Effect>("ScharrShader");
+            var pixelOffsetX = new Vector3(-width, 0, width);
+            var pixelOffsetY = new Vector3(-height, 0, height);
 
-           SobelShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
-           SobelShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
+            SobelShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
+            SobelShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
 
-           ScharrShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
-           ScharrShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
+            ScharrShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
+            ScharrShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
         }
 
 
@@ -335,7 +327,7 @@ namespace GrafikosEfektųProgramavimas
         KeyboardState oldKeyboardState = Keyboard.GetState();
         private bool IsKeyPressed(Keys k)
         {
-            return (oldKeyboardState.IsKeyUp(k) && Keyboard.GetState().IsKeyDown(k));            
+            return (oldKeyboardState.IsKeyUp(k) && Keyboard.GetState().IsKeyDown(k));
         }
 
         #region updates
@@ -357,25 +349,31 @@ namespace GrafikosEfektųProgramavimas
 
             if (Mouse.GetState().RightButton == ButtonState.Pressed)
             {
-                         
+
                 CameraControl.Hover(cameraPosition, lookAt, (float)(gameTime.ElapsedGameTime.TotalMilliseconds * speed));
                 if (this.IsMouseVisible == true)
                 {
                     CameraControl.CameraResult = Vector3.Zero;
                     CameraControl.LookAtResult = Vector3.Zero;
-                }   
-                this.IsMouseVisible = false;    
+                }
+                this.IsMouseVisible = false;
             }
             else
             {
                 this.IsMouseVisible = true;
             }
-            
+
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
                 var position = cameraPosition;
             }
 
+            if (oldKeyboardState.IsKeyDown(Keys.L))
+            {
+                RenderableObject o = new RenderableObject(cube);
+                o.Position = cameraPosition + 10 * Vector3.Normalize(lookAt - cameraPosition);
+                models.Add(o);
+            }
             oldKeyboardState = Keyboard.GetState();
             models.ForEach(m => m.Update(gameTime));
             Buttons.Update();
@@ -387,7 +385,7 @@ namespace GrafikosEfektųProgramavimas
 
         protected override void Draw(GameTime gameTime)
         {
-            
+
             cameraPosition += CameraControl.CameraResult;
             lookAt += CameraControl.LookAtResult + CameraControl.CameraResult;
             CameraControl.LookAtResult = Vector3.Zero;
@@ -411,7 +409,7 @@ namespace GrafikosEfektųProgramavimas
             GraphicsDevice.Clear(Color.FromNonPremultiplied((int)(0.3 * 255), (int)(0.3 * 255), (int)(0.3 * 255), 255));
 
             if (SkyboxEnabled)
-            {     
+            {
                 // Skybox:
                 GraphicsDevice.RasterizerState = invertedCulling;
                 var skyBoxWorld = Matrix.CreateScale(10000.0f) * Matrix.CreateTranslation(cameraPosition);
@@ -434,17 +432,17 @@ namespace GrafikosEfektųProgramavimas
             // Shadow pass:
             ShadowShader.Parameters["LightView"].SetValue(SunLookAt);
             ShadowShader.Parameters["LightProjection"].SetValue(SunProjection);
-            ShadowShader.Parameters["ShadowTexture"].SetValue((Texture2D) ShadowRenderTarget);
+            ShadowShader.Parameters["ShadowTexture"].SetValue((Texture2D)ShadowRenderTarget);
             foreach (var model in models)
             {
                 ActiveMainShader.Parameters["DiffuseTexture"].SetValue(textures[ParseMeshName(model.ObjectModel.Meshes[0].Name)]);
                 model.Render(ActiveMainShader, view, projection, World, cameraPosition);
             }
-       
+
             GraphicsDevice.SetRenderTarget(null);
             RenderBuffer = (Texture2D)RenderTarget;
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
-            
+
             using (SpriteBatch sprite = new SpriteBatch(GraphicsDevice))
             {
                 sprite.Begin(0, BlendState.AlphaBlend, null, null, null, ActivePostEffect);
@@ -455,9 +453,9 @@ namespace GrafikosEfektųProgramavimas
             }
 
             base.Draw(gameTime);
-            return;          
+            return;
         }
         #endregion
     }
-       
+
 }
