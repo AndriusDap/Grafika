@@ -11,7 +11,7 @@ namespace GrafikosEfektųProgramavimas
     class BasicParticleSystem : IRenderable
     {
         static private Random rng = new Random();
-        static private float AgeLimit = 2000;
+        static private float AgeLimit = 500;
         class Particle
         {
             public bool Alive;
@@ -26,7 +26,7 @@ namespace GrafikosEfektųProgramavimas
                     (float)(rng.NextDouble() - 0.5),
                     (float)(rng.NextDouble() - 0.5),
                     (float)(rng.NextDouble() - 0.5));
-                Speed = Vector3.Normalize(RandomVector) / 5;
+                Speed = Vector3.Normalize(RandomVector) / 10;
                 Position = new Vector3(0, 0, 0);
                 obj = new RenderableObject(m);
             }
@@ -34,47 +34,62 @@ namespace GrafikosEfektųProgramavimas
             public void Update(GameTime time)
             {
                 Position += Speed * (float)time.ElapsedGameTime.TotalMilliseconds;
-              //  Speed *= 0.99f;
+                Speed.Y -= 0.005f;
             }
         }
 
         List<Particle> particles;
 
         private static int MaxParticles = 500;
+        private static int BatchSize = 10;
         private float age;
 
         public Model ObjectModel { get; set; }
         public Vector3 Position { get; set; }
-
+        private int cursor;
         public BasicParticleSystem(Model m)
         {
             ObjectModel = m;
             particles = new List<Particle>(MaxParticles);
-            for (int i = 0; i < MaxParticles; i++)
-            {
-                particles.Add(new Particle(ObjectModel));
-            }
+            particles.AddRange(Enumerable.Repeat<Particle>(null, MaxParticles));
+            cursor = 0;
+
         }
+
+
+        private void AddParticles()
+        {
+            for (int i = 0; i < BatchSize; i++)
+            {
+                particles[i + cursor] = new Particle(ObjectModel);
+            }
+            cursor += BatchSize;
+            cursor %= MaxParticles;
+        }
+
 
         public void Update(GameTime time)
         {
-            if (age < AgeLimit)
+            particles.ForEach(p =>
             {
-                age += (float)time.ElapsedGameTime.TotalMilliseconds;
-                particles.ForEach(p => p.Update(time));
-            }
+                if (p != null)
+                {
+                    p.Update(time);
+                }
+            });
+            AddParticles();
         }
 
         public void Render(Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
-            if (age < AgeLimit)
-            {
-                particles.ForEach(p =>
+            particles.ForEach(p =>
+                {
+                    if (p != null)
                     {
                         p.obj.Position = p.Position + Position;
                         p.obj.Render(View, Projection, world, CameraPosition);
-                    });
-            }
+                    }
+                });
         }
 
         public void Render(Effect customShader, Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
@@ -83,8 +98,11 @@ namespace GrafikosEfektųProgramavimas
             {
                 particles.ForEach(p =>
                     {
-                        p.obj.Position = p.Position + Position;
-                        p.obj.Render(customShader, View, Projection, world, CameraPosition);
+                        if (p != null)
+                        {
+                            p.obj.Position = p.Position + Position;
+                            p.obj.Render(customShader, View, Projection, world, CameraPosition);
+                        }
                     });
             }
         }
@@ -93,7 +111,13 @@ namespace GrafikosEfektųProgramavimas
         {
             if (age < AgeLimit)
             {
-                particles.ForEach(p => p.obj.SetUpEffects(SetUpFunction));
+                particles.ForEach(p =>
+                    {
+                        if (p != null)
+                        {
+                            p.obj.SetUpEffects(SetUpFunction);
+                        }
+                    });
             }
         }
     }
