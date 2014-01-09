@@ -46,6 +46,7 @@ namespace GrafikosEfektųProgramavimas
         // Post effects
         Effect SobelShader;
         Effect ScharrShader;
+        Effect BlurShader;
         Effect ActivePostEffect = null;
 
         // Main shaders
@@ -135,6 +136,18 @@ namespace GrafikosEfektųProgramavimas
                 else
                 {
                     ActivePostEffect = ScharrShader;
+                }
+            });
+
+            Buttons.AddButton("Blur", () =>
+            {
+                if (ActivePostEffect == BlurShader)
+                {
+                    ActivePostEffect = null;
+                }
+                else
+                {
+                    ActivePostEffect = BlurShader;
                 }
             });
 
@@ -314,6 +327,10 @@ namespace GrafikosEfektųProgramavimas
 
             ScharrShader.Parameters["pixelOffsetX"].SetValue(pixelOffsetX);
             ScharrShader.Parameters["pixelOffsetY"].SetValue(pixelOffsetY);
+
+            BlurShader = Content.Load<Effect>("BlurShader");
+            BlurShader.Parameters["pixelWidth"].SetValue(width);
+            BlurShader.Parameters["pixelHeight"].SetValue(height);
         }
 
 
