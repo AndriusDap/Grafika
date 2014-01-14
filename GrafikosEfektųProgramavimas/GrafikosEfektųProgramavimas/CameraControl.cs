@@ -13,6 +13,7 @@ namespace GrafikosEfektųProgramavimas
         
 	static public Vector3 CameraResult; //This Vector3 holds the general camera movements
 	static public Vector3 LookAtResult; //This Vector3 holds the movements of the LookAt and only them.
+    static public Vector3 UpResult = Vector3.Up;
 	/// <summary>
 	/// The standard camera movements (Output: Vector3 CameraResut / Vector3 LookAtResult)
 	/// </summary>
@@ -138,22 +139,35 @@ namespace GrafikosEfektųProgramavimas
 		//relative to the center of the screen, so you'll need two values for this MonitorWidth
 		// and MonitorHeight.
 		//For this example I will take the dimensions 1440 to 900.
+
+        if (keyboard.IsKeyDown(Keys.Up))
+        {
+            mousemoveX = -3;
+        }
+
+
+        if (keyboard.IsKeyDown(Keys.Down))
+        {
+            mousemoveX = 3;
+        }
+
+        if (keyboard.IsKeyDown(Keys.Right))
+        {
+            mousemoveY = 3;
+        }
+
+
+        if (keyboard.IsKeyDown(Keys.Left))
+        {
+            mousemoveY = -3;
+        }
  
-		int MonitorWidth = 1200;
-		int MonitorHeight = 600;
- 
-		mousemoveX = mouse.Y - (MonitorHeight / 2);
-		mousemoveY = mouse.X - (MonitorWidth / 2);
  
 		AngleAddZ = (float)MathHelper.ToRadians(mousemoveX / 3);
         
 		AngleAddY = -(float)MathHelper.ToRadians(mousemoveY / 3);
  
-		//Note: The next call will set the mouse into the center of the screen
-		// again, in that case you will have to close the window with Alt + F4.
- 
-		Mouse.SetPosition(MonitorWidth / 2, MonitorHeight / 2);
- 
+
 		//Now applay the mousemovements:
 
 		Matrix RotationMatrix =
@@ -171,6 +185,7 @@ namespace GrafikosEfektųProgramavimas
 		CameraResult = Velocity;
 
         LookAtResult = Rotation;
+        UpResult = Vector3.Transform(LookAtResult, Matrix.CreateRotationX((float) Math.PI / 2));
 	}
 }
 }

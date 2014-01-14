@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicParticleSystem.cs" />
+    <Compile Include="Billboard.cs" />
     <Compile Include="ButtonMaster.cs" />
     <Compile Include="CameraControl.cs" />
     <Compile Include="IRenderable.cs" />

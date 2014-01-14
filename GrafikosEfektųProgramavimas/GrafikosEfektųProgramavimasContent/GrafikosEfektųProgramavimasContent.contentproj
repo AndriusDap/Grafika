@@ -198,6 +198,35 @@
       <Processor>EffectProcessor</Processor>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ColorOffsetShader.fx">
+      <Name>ColorOffsetShader</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="square.fbx">
+      <Name>square</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ContentProcessor1</Processor>
+      <ProcessorParameters_Effect>BasicLight.fx</ProcessorParameters_Effect>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Plane.png">
+      <Name>Plane</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Plane_DIFF.png">
+      <Name>Plane_DIFF</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
   <!--  To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -47,6 +47,7 @@ namespace GrafikosEfektųProgramavimas
         Effect SobelShader;
         Effect ScharrShader;
         Effect BlurShader;
+        Effect ColorOffsetShader;
         Effect ActivePostEffect = null;
 
         // Main shaders
@@ -61,8 +62,10 @@ namespace GrafikosEfektųProgramavimas
 
         ButtonMaster Buttons;
         Model cube;
+        Model rectangle;
         #endregion
 
+        bool ShadowMapEnabled = false;
         #region initialization
         public Game1()
         {
@@ -85,6 +88,8 @@ namespace GrafikosEfektųProgramavimas
 
             RenderPasses = new RenderTarget2D[2];
             Buttons = new ButtonMaster();
+            
+            this.IsMouseVisible = true;
         }
 
         public static String ParseMeshName(String name)
@@ -151,6 +156,18 @@ namespace GrafikosEfektųProgramavimas
                 }
             });
 
+            Buttons.AddButton("Color offset", () =>
+            {
+                if (ActivePostEffect == ColorOffsetShader)
+                {
+                    ActivePostEffect = null;
+                }
+                else
+                {
+                    ActivePostEffect = ColorOffsetShader;
+                }
+            });
+
             Buttons.AddButton("Cell shading", () =>
             {
                 if (ActiveMainShader == ToonShader && !BasicShaderEnabled)
@@ -168,13 +185,16 @@ namespace GrafikosEfektųProgramavimas
 
             Buttons.AddButton("Shadow Map", () =>
             {
+
                 if (ActiveMainShader == ShadowShader)
                 {
+                    ShadowMapEnabled = true;
                     ActiveMainShader = ToonShader;
                     ActiveMainShader.Parameters["IsThisToon"].SetValue(0f);
                 }
                 else
                 {
+                    ShadowMapEnabled = false;
                     ActiveMainShader = ShadowShader;
                 }
             });
@@ -200,7 +220,7 @@ namespace GrafikosEfektųProgramavimas
                 });
             Buttons.AddButton("Particles", () =>
                 {
-                    BasicParticleSystem ps = new BasicParticleSystem(cube);
+                    BasicParticleSystem ps = new BasicParticleSystem(rectangle);
                     ps.Position = cameraPosition + 500 * Vector3.Normalize(lookAt - cameraPosition);
                     models.Add(ps);
                 });
@@ -245,6 +265,8 @@ namespace GrafikosEfektųProgramavimas
             var terrain = Content.Load<Model>("large_heightmap");
             models.Add(new RenderableObject(terrain));
 
+            rectangle = Content.Load<Model>("square");
+
             skybox = Content.Load<Model>("skybox2");
 
             cube = Content.Load<Model>("cube2");
@@ -282,6 +304,8 @@ namespace GrafikosEfektųProgramavimas
                     }
                 }
             }
+            // particle texture
+            textureNames.Add("Plane");
 
             foreach (var textureName in textureNames)
             {
@@ -331,6 +355,10 @@ namespace GrafikosEfektųProgramavimas
             BlurShader = Content.Load<Effect>("BlurShader");
             BlurShader.Parameters["pixelWidth"].SetValue(width);
             BlurShader.Parameters["pixelHeight"].SetValue(height);
+
+            ColorOffsetShader = Content.Load<Effect>("ColorOffsetShader");
+            ColorOffsetShader.Parameters["pixelWidth"].SetValue(width);
+            ColorOffsetShader.Parameters["pixelHeight"].SetValue(height);
         }
 
 
@@ -364,21 +392,9 @@ namespace GrafikosEfektųProgramavimas
                 speed *= 10f;
             }
 
-            if (Mouse.GetState().RightButton == ButtonState.Pressed)
-            {
 
-                CameraControl.Hover(cameraPosition, lookAt, (float)(gameTime.ElapsedGameTime.TotalMilliseconds * speed));
-                if (this.IsMouseVisible == true)
-                {
-                    CameraControl.CameraResult = Vector3.Zero;
-                    CameraControl.LookAtResult = Vector3.Zero;
-                }
-                this.IsMouseVisible = false;
-            }
-            else
-            {
-                this.IsMouseVisible = true;
-            }
+            CameraControl.Hover(cameraPosition, lookAt, (float)(gameTime.ElapsedGameTime.TotalMilliseconds * speed));
+
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
@@ -387,7 +403,7 @@ namespace GrafikosEfektųProgramavimas
 
             if (oldKeyboardState.IsKeyDown(Keys.L))
             {
-                RenderableObject o = new RenderableObject(cube);
+                Billboard o = new Billboard(rectangle);
                 o.Position = cameraPosition + 10 * Vector3.Normalize(lookAt - cameraPosition);
                 models.Add(o);
             }
@@ -412,11 +428,14 @@ namespace GrafikosEfektųProgramavimas
             GraphicsDevice.Clear(Color.Black);
             GraphicsDevice.BlendState = BlendState.Opaque;
             // ShadowMap pass:
-            GraphicsDevice.SetRenderTarget(ShadowRenderTarget);
-            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
-            foreach (var model in models)
+            if (ShadowMapEnabled)
             {
-                model.Render(depthshader, SunLookAt, SunProjection, World, SunPosition);
+                GraphicsDevice.SetRenderTarget(ShadowRenderTarget);
+                GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
+                foreach (var model in models)
+                {
+                    model.Render(depthshader, SunLookAt, SunProjection, World, SunPosition);
+                }
             }
 
 

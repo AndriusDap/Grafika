@@ -15,7 +15,7 @@ namespace GrafikosEfektųProgramavimas
         class Particle
         {
             public bool Alive;
-            public RenderableObject obj;
+            public Billboard obj;
             public Vector3 Position;
             public Vector3 Speed;
 
@@ -28,7 +28,7 @@ namespace GrafikosEfektųProgramavimas
                     (float)(rng.NextDouble() - 0.5));
                 Speed = Vector3.Normalize(RandomVector) / 10;
                 Position = new Vector3(0, 0, 0);
-                obj = new RenderableObject(m);
+                obj = new Billboard(m);
             }
 
             public void Update(GameTime time)

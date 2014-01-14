@@ -66,12 +66,12 @@ namespace GrafikosEfektųProgramavimas
                 dirty = false;
             }
         }
-        public void Update(GameTime t)
+        public virtual void Update(GameTime t)
         {
             UpdateMatrix();
         }
 
-        public void Render(Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
+        public virtual void Render(Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
             UpdateMatrix();
             foreach (ModelMesh mesh in ObjectModel.Meshes)
@@ -89,7 +89,7 @@ namespace GrafikosEfektųProgramavimas
             }
         }
         Effect DefaultEffect;
-        public void Render(Effect customShader, Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
+        public virtual void Render(Effect customShader, Matrix View, Matrix Projection, Matrix world, Vector3 CameraPosition)
         {
             foreach (ModelMesh mesh in ObjectModel.Meshes)
             {
